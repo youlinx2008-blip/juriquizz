@@ -1,0 +1,245 @@
+{
+  "id": "matiere-exemple",
+  "cours": "Matière d'exemple",
+  "statut_relecture_par_defaut": "a_relire",
+  "chapitres": [
+    {
+      "id": "decouverte",
+      "numero": "0",
+      "libelle": "Introduction",
+      "titre": "Découvrir JuriQuizz",
+      "decor_par_defaut": "codex",
+      "resume": "Un chapitre de démonstration pour tester l'application : niveaux, indices, explications et décors.",
+      "niveaux": {
+        "facile": [
+          {
+            "id": "exemple-decouverte-facile-01",
+            "ordre_cours": 1,
+            "type": "qcm",
+            "decor": "codex",
+            "enonce": "Combien de niveaux de quiz propose chaque chapitre ?",
+            "options": [
+              { "id": "a", "texte": "Un seul" },
+              { "id": "b", "texte": "Deux" },
+              { "id": "c", "texte": "Trois" },
+              { "id": "d", "texte": "Cinq" }
+            ],
+            "bonne_reponse": "c",
+            "indice": "Facile, intermédiaire, puis…",
+            "explication": [
+              "La bonne réponse est c. Chaque chapitre propose trois niveaux : facile, intermédiaire et confirmé.",
+              "Le niveau facile vise la mémorisation, l'intermédiaire la compréhension, le confirmé l'application."
+            ]
+          },
+          {
+            "id": "exemple-decouverte-facile-02",
+            "ordre_cours": 2,
+            "type": "vrai_faux",
+            "decor": "mer",
+            "enonce": "Vrai ou faux : le son d'ambiance est synthétisé dans le navigateur, sans fichier audio.",
+            "options": [
+              { "id": "v", "texte": "Vrai" },
+              { "id": "f", "texte": "Faux" }
+            ],
+            "bonne_reponse": "v",
+            "indice": "Rien n'est téléchargé.",
+            "explication": ["Vrai. Les sons sont produits à la volée par le navigateur."]
+          }
+        ],
+        "intermediaire": [
+          {
+            "id": "exemple-decouverte-intermediaire-01",
+            "ordre_cours": 3,
+            "type": "qcm",
+            "decor": "eglise",
+            "enonce": "Que signifie le bandeau « en cours de relecture » ?",
+            "options": [
+              { "id": "a", "texte": "La question est fausse" },
+              { "id": "b", "texte": "La question n'a pas encore été relue" },
+              { "id": "c", "texte": "La question est réservée à l'administration" },
+              { "id": "d", "texte": "La question ne compte pas dans le score" }
+            ],
+            "bonne_reponse": "b",
+            "indice": "Pensez au statut de relecture.",
+            "explication": [
+              "La bonne réponse est b. Pendant la bêta, les questions pas encore relues restent visibles, avec ce bandeau."
+            ]
+          },
+          {
+            "id": "exemple-decouverte-intermediaire-02",
+            "ordre_cours": 4,
+            "type": "vrai_faux",
+            "decor": null,
+            "enonce": "Vrai ou faux : « Refaire mes erreurs » reprend tout le niveau depuis le début.",
+            "options": [
+              { "id": "v", "texte": "Vrai" },
+              { "id": "f", "texte": "Faux" }
+            ],
+            "bonne_reponse": "f",
+            "indice": "Seulement les questions manquées.",
+            "explication": ["Faux. Seules les questions manquées sont reposées."]
+          }
+        ],
+        "confirme": [
+          {
+            "id": "exemple-decouverte-confirme-01",
+            "ordre_cours": 5,
+            "type": "cas_pratique",
+            "decor": "plaine",
+            "enonce": "Cas pratique : Léa obtient 5 sur 7 au niveau facile. Que lui propose l'écran de résultats ?",
+            "options": [
+              { "id": "a", "texte": "Rien : elle doit tout recommencer" },
+              { "id": "b", "texte": "De refaire ses deux erreurs, ou de rejouer le niveau" },
+              { "id": "c", "texte": "De passer directement au chapitre suivant" },
+              { "id": "d", "texte": "De corriger elle-même la question" }
+            ],
+            "bonne_reponse": "b",
+            "indice": "Deux boutons principaux.",
+            "explication": [
+              "La bonne réponse est b. L'écran de résultats propose « Refaire mes erreurs » et « Rejouer ce niveau ».",
+              "Le détail des questions, avec leurs explications, reste consultable en dessous."
+            ]
+          },
+          {
+            "id": "exemple-decouverte-confirme-02",
+            "ordre_cours": 6,
+            "type": "cas_pratique",
+            "decor": "frontiere",
+            "enonce": "Cas pratique : une question vous paraît ambiguë. Que faire ?",
+            "options": [
+              { "id": "a", "texte": "L'ignorer" },
+              { "id": "b", "texte": "Recommencer le niveau" },
+              { "id": "c", "texte": "Le signaler avec le formulaire « Cette question est-elle claire ? »" },
+              { "id": "d", "texte": "Changer de décor" }
+            ],
+            "bonne_reponse": "c",
+            "indice": "Il y a un formulaire sous chaque correction.",
+            "explication": [
+              "La bonne réponse est c. Les retours servent à repérer les questions mal formulées."
+            ]
+          }
+        ]
+      }
+    },
+    {
+      "id": "methode",
+      "numero": "I",
+      "libelle": "Chapitre I",
+      "titre": "La méthode du cas pratique",
+      "decor_par_defaut": "chateau",
+      "resume": "Le raisonnement juridique en trois temps : la règle, les faits, la conclusion.",
+      "niveaux": {
+        "facile": [
+          {
+            "id": "exemple-methode-facile-01",
+            "ordre_cours": 1,
+            "type": "vrai_faux",
+            "decor": null,
+            "enonce": "Vrai ou faux : dans un syllogisme juridique, la majeure énonce la règle de droit.",
+            "options": [
+              { "id": "v", "texte": "Vrai" },
+              { "id": "f", "texte": "Faux" }
+            ],
+            "bonne_reponse": "v",
+            "indice": "Majeure, mineure, conclusion.",
+            "explication": [
+              "Vrai. La majeure énonce la règle, la mineure présente les faits qualifiés, la conclusion applique l'une aux autres."
+            ]
+          },
+          {
+            "id": "exemple-methode-facile-02",
+            "ordre_cours": 2,
+            "type": "qcm",
+            "decor": "ruines",
+            "enonce": "Comment appelle-t-on la deuxième étape du syllogisme juridique ?",
+            "options": [
+              { "id": "a", "texte": "La majeure" },
+              { "id": "b", "texte": "La mineure" },
+              { "id": "c", "texte": "La conclusion" },
+              { "id": "d", "texte": "Le dispositif" }
+            ],
+            "bonne_reponse": "b",
+            "indice": "Après la règle viennent les faits.",
+            "explication": [
+              "La bonne réponse est b. La mineure présente les faits de l'espèce, qualifiés juridiquement."
+            ]
+          }
+        ],
+        "intermediaire": [
+          {
+            "id": "exemple-methode-intermediaire-01",
+            "ordre_cours": 3,
+            "type": "qcm",
+            "decor": null,
+            "enonce": "Qualifier juridiquement des faits, c'est :",
+            "options": [
+              { "id": "a", "texte": "Les résumer" },
+              { "id": "b", "texte": "Les rattacher à une catégorie juridique" },
+              { "id": "c", "texte": "Les juger moralement" },
+              { "id": "d", "texte": "Les classer par date" }
+            ],
+            "bonne_reponse": "b",
+            "indice": "Une catégorie, pour savoir quelle règle s'applique.",
+            "explication": [
+              "La bonne réponse est b. La qualification fait entrer les faits dans une catégorie juridique, ce qui désigne la règle applicable."
+            ]
+          },
+          {
+            "id": "exemple-methode-intermediaire-02",
+            "ordre_cours": 4,
+            "type": "vrai_faux",
+            "decor": null,
+            "enonce": "Vrai ou faux : le problème de droit se formule avant la qualification des faits.",
+            "options": [
+              { "id": "v", "texte": "Vrai" },
+              { "id": "f", "texte": "Faux" }
+            ],
+            "bonne_reponse": "f",
+            "indice": "On ne peut poser la question juridique qu'une fois les faits qualifiés.",
+            "explication": [
+              "Faux. On qualifie d'abord les faits ; le problème de droit se formule ensuite, en termes juridiques."
+            ]
+          }
+        ],
+        "confirme": [
+          {
+            "id": "exemple-methode-confirme-01",
+            "ordre_cours": 5,
+            "type": "cas_pratique",
+            "decor": "chateau",
+            "enonce": "Cas pratique : une copie énonce la règle, puis conclut sans jamais revenir aux faits. Qu'est-ce qui manque ?",
+            "options": [
+              { "id": "a", "texte": "La majeure" },
+              { "id": "b", "texte": "La mineure" },
+              { "id": "c", "texte": "La conclusion" },
+              { "id": "d", "texte": "Rien" }
+            ],
+            "bonne_reponse": "b",
+            "indice": "Où sont les faits ?",
+            "explication": [
+              "La bonne réponse est b. Sans mineure, la règle n'est jamais appliquée aux faits de l'espèce."
+            ]
+          },
+          {
+            "id": "exemple-methode-confirme-02",
+            "ordre_cours": 6,
+            "type": "cas_pratique",
+            "decor": "plaine",
+            "enonce": "Cas pratique : quelle conclusion convient le mieux à un syllogisme bien construit ?",
+            "options": [
+              { "id": "a", "texte": "Une opinion personnelle" },
+              { "id": "b", "texte": "Une nouvelle règle" },
+              { "id": "c", "texte": "La réponse au problème de droit, tirée de la règle et des faits" },
+              { "id": "d", "texte": "Un résumé des faits" }
+            ],
+            "bonne_reponse": "c",
+            "indice": "Elle répond à la question posée.",
+            "explication": [
+              "La bonne réponse est c. La conclusion répond au problème de droit en appliquant la règle aux faits."
+            ]
+          }
+        ]
+      }
+    }
+  ]
+}

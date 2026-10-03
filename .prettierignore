@@ -1,0 +1,11 @@
+.next
+content
+node_modules
+package-lock.json
+playwright-report
+public/hors-ligne.html
+src/lib/supabase/database.types.ts
+supabase/.temp
+supabase/migrations
+supabase/templates
+test-results

@@ -1,0 +1,525 @@
+/* Décors : couches plein écran derrière le contenu, fondu d'une ambiance à l'autre. */
+.scenes {
+  position: fixed;
+  inset: 0;
+  z-index: 0;
+  pointer-events: none;
+}
+.scene {
+  position: absolute;
+  inset: 0;
+  opacity: 0;
+  transition: opacity 1.2s ease;
+  overflow: hidden;
+}
+.scene.on {
+  opacity: 1;
+}
+.scene svg {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+}
+.sc-ruines {
+  background: linear-gradient(#f9e1b0, #f4c88e 50%, #eaa86e);
+}
+.sc-frontiere {
+  background: linear-gradient(#0b1430, #1c2d55 45%, #3e5d88 75%, #7c9cc0);
+}
+.sc-codex {
+  background: #3a2716;
+}
+.sc-eglise {
+  background: #16122d;
+}
+.sc-plaine {
+  background: linear-gradient(#8cc3e6, #bfe0f0 45%, #f3ecd0 80%, #f6e1b0);
+}
+.sc-mer {
+  background: linear-gradient(#1a2444, #3d3a68 30%, #8a5a78 52%, #d97f5e 68%, #f4b26f 80%, #f7c98a);
+}
+.sc-chateau {
+  background: linear-gradient(#7fb6e0, #b7d8ee 45%, #eef0d8 80%, #f3e2b8);
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) .scene {
+    filter: brightness(0.66) saturate(0.9);
+  }
+}
+:root[data-theme="dark"] .scene {
+  filter: brightness(0.66) saturate(0.9);
+}
+.scene:not(.on) * {
+  animation-play-state: paused !important;
+}
+[data-decor="fixe"] .scene * {
+  animation-play-state: paused !important;
+}
+[data-decor="off"] .scenes {
+  display: none;
+}
+@media (prefers-reduced-motion: reduce) {
+  .scene * {
+    animation: none !important;
+  }
+  .scene {
+    transition: none;
+  }
+}
+
+@keyframes drift {
+  from {
+    transform: translateX(-320px);
+  }
+  to {
+    transform: translateX(1520px);
+  }
+}
+@keyframes flicker {
+  0%,
+  100% {
+    opacity: 0.95;
+    transform: scale(1);
+  }
+  30% {
+    opacity: 0.7;
+    transform: scale(0.9);
+  }
+  60% {
+    opacity: 1;
+    transform: scale(1.08);
+  }
+}
+@keyframes spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+@keyframes shimmer {
+  0%,
+  100% {
+    opacity: 0.25;
+  }
+  50% {
+    opacity: 0.85;
+  }
+}
+@keyframes twinkle {
+  0%,
+  100% {
+    opacity: 0.2;
+  }
+  50% {
+    opacity: 1;
+  }
+}
+@keyframes fall {
+  from {
+    transform: translate3d(0, 0, 0);
+  }
+  to {
+    transform: translate3d(var(--dx), 112vh, 0);
+  }
+}
+@keyframes rise {
+  0% {
+    transform: translate3d(0, 0, 0);
+    opacity: 0;
+  }
+  12% {
+    opacity: 0.8;
+  }
+  100% {
+    transform: translate3d(var(--dx), -112vh, 0);
+    opacity: 0;
+  }
+}
+@keyframes fly {
+  from {
+    transform: translate(-120px, 0);
+  }
+  to {
+    transform: translate(1320px, -70px);
+  }
+}
+@keyframes swing {
+  from {
+    transform: rotate(-4deg);
+  }
+  to {
+    transform: rotate(4deg);
+  }
+}
+@keyframes pageturn {
+  0%,
+  55% {
+    transform: scaleX(1);
+    opacity: 0;
+  }
+  58% {
+    opacity: 1;
+  }
+  76% {
+    transform: scaleX(-1);
+    opacity: 1;
+  }
+  80%,
+  100% {
+    transform: scaleX(-1);
+    opacity: 0;
+  }
+}
+@keyframes smoke {
+  0% {
+    transform: translate(0, 0) scaleX(1);
+    opacity: 0;
+  }
+  15% {
+    opacity: 0.5;
+  }
+  100% {
+    transform: translate(14px, -170px) scaleX(1.6);
+    opacity: 0;
+  }
+}
+@keyframes sway {
+  from {
+    transform: rotate(-4deg);
+  }
+  to {
+    transform: rotate(4deg);
+  }
+}
+@keyframes waveL {
+  from {
+    transform: translateX(0);
+  }
+  to {
+    transform: translateX(-400px);
+  }
+}
+@keyframes ride {
+  from {
+    transform: translateX(-200px);
+  }
+  to {
+    transform: translateX(1400px);
+  }
+}
+@keyframes bob {
+  0%,
+  100% {
+    transform: translateY(0) rotate(-1.2deg);
+  }
+  50% {
+    transform: translateY(-6px) rotate(1.2deg);
+  }
+}
+@keyframes par {
+  from {
+    transform: translateX(-16px);
+  }
+  to {
+    transform: translateX(16px);
+  }
+}
+@keyframes cross {
+  0% {
+    transform: translateX(0);
+    opacity: 0;
+  }
+  8% {
+    opacity: 1;
+  }
+  92% {
+    opacity: 1;
+  }
+  100% {
+    transform: translateX(520px);
+    opacity: 0;
+  }
+}
+@keyframes flagwave {
+  0%,
+  100% {
+    transform: skewY(-5deg) scaleX(1);
+  }
+  50% {
+    transform: skewY(5deg) scaleX(0.93);
+  }
+}
+@keyframes sail {
+  from {
+    transform: translateX(-320px);
+  }
+  to {
+    transform: translateX(1500px);
+  }
+}
+@keyframes wing {
+  from {
+    transform: scaleY(1);
+  }
+  to {
+    transform: scaleY(0.3);
+  }
+}
+@keyframes flap {
+  from {
+    transform: scaleX(1);
+  }
+  to {
+    transform: scaleX(0.22);
+  }
+}
+@keyframes flit {
+  0% {
+    transform: translate(0, 0);
+  }
+  25% {
+    transform: translate(46px, -28px);
+  }
+  50% {
+    transform: translate(86px, 4px);
+  }
+  75% {
+    transform: translate(34px, 22px);
+  }
+  100% {
+    transform: translate(0, 0);
+  }
+}
+@keyframes leaf {
+  from {
+    transform: rotate(-1.2deg);
+  }
+  to {
+    transform: rotate(1.2deg);
+  }
+}
+@keyframes breathe {
+  0%,
+  100% {
+    opacity: 0.45;
+  }
+  50% {
+    opacity: 1;
+  }
+}
+@keyframes trot {
+  0%,
+  100% {
+    transform: translateY(0);
+  }
+  50% {
+    transform: translateY(-3px);
+  }
+}
+@keyframes oar {
+  0%,
+  100% {
+    transform: rotate(-14deg);
+  }
+  50% {
+    transform: rotate(16deg);
+  }
+}
+@keyframes billow {
+  0%,
+  100% {
+    transform: scaleX(1);
+  }
+  50% {
+    transform: scaleX(1.04);
+  }
+}
+@keyframes write {
+  0%,
+  100% {
+    transform: rotate(0);
+  }
+  30% {
+    transform: rotate(-2.4deg);
+  }
+  60% {
+    transform: rotate(1.4deg);
+  }
+}
+@keyframes scythe {
+  0%,
+  100% {
+    transform: rotate(-20deg);
+  }
+  50% {
+    transform: rotate(28deg);
+  }
+}
+@keyframes hang {
+  0%,
+  100% {
+    transform: rotate(-3deg);
+  }
+  50% {
+    transform: rotate(3deg);
+  }
+}
+
+.drift {
+  animation: drift linear infinite;
+}
+.flicker {
+  transform-box: fill-box;
+  transform-origin: 50% 100%;
+  animation: flicker 2.3s ease-in-out infinite;
+}
+.sunrays {
+  transform-origin: 700px 240px;
+  animation: spin 300s linear infinite;
+}
+.spin {
+  transform-origin: 600px 260px;
+  animation: spin 180s linear infinite;
+}
+.shimmer {
+  animation: shimmer 7s ease-in-out infinite;
+}
+.tw {
+  animation: twinkle ease-in-out infinite;
+}
+.fly {
+  animation: fly linear infinite;
+}
+.swing {
+  animation: swing 5.5s ease-in-out infinite alternate;
+}
+.turn {
+  transform-origin: 600px 740px;
+  animation: pageturn 14s ease-in-out infinite;
+}
+.smoke {
+  transform-box: fill-box;
+  transform-origin: 50% 100%;
+  animation: smoke ease-out infinite;
+}
+.sway {
+  transform-box: fill-box;
+  transform-origin: 50% 100%;
+  animation: sway 4s ease-in-out infinite alternate;
+}
+.waveL {
+  animation: waveL linear infinite;
+}
+.ride {
+  animation: ride linear infinite;
+}
+.bob {
+  transform-box: fill-box;
+  transform-origin: 50% 60%;
+  animation: bob 5s ease-in-out infinite;
+}
+.par {
+  animation: par ease-in-out infinite alternate;
+}
+.cross {
+  animation: cross 140s linear infinite;
+}
+.flag {
+  transform-box: fill-box;
+  transform-origin: 0 50%;
+  animation: flagwave 3s ease-in-out infinite;
+}
+.sail {
+  animation: sail linear infinite;
+}
+.wing {
+  transform-box: fill-box;
+  transform-origin: 50% 100%;
+  animation: wing ease-in-out infinite alternate;
+}
+.flap {
+  transform-box: fill-box;
+  transform-origin: 50% 50%;
+  animation: flap 0.22s ease-in-out infinite alternate;
+}
+.flit {
+  animation: flit ease-in-out infinite;
+}
+.canopy {
+  transform-box: fill-box;
+  transform-origin: 50% 100%;
+  animation: leaf 6s ease-in-out infinite alternate;
+}
+.breathe {
+  animation: breathe 8s ease-in-out infinite;
+}
+.trot {
+  animation: trot 0.5s ease-in-out infinite;
+}
+.oar {
+  transform-box: fill-box;
+  transform-origin: 100% 0;
+  animation: oar 3.2s ease-in-out infinite;
+}
+.billow {
+  transform-box: fill-box;
+  transform-origin: 50% 0;
+  animation: billow 5s ease-in-out infinite;
+}
+.write {
+  animation: write 2.6s ease-in-out infinite;
+}
+.scythe {
+  animation: scythe 2.4s ease-in-out infinite;
+}
+.hang {
+  animation: hang 4s ease-in-out infinite;
+}
+.flake.near {
+  filter: blur(1px);
+  opacity: 0.9;
+}
+.grain {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  opacity: 0.07;
+  mix-blend-mode: overlay;
+  background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='180' height='180'><filter id='n'><feTurbulence type='fractalNoise' baseFrequency='.9' numOctaves='2' stitchTiles='stitch'/><feColorMatrix type='saturate' values='0'/></filter><rect width='100%25' height='100%25' filter='url(%23n)'/></svg>");
+}
+.scenes::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  background: radial-gradient(ellipse at 62% 42%, transparent 50%, rgba(8, 6, 16, 0.3) 100%);
+}
+[data-decor="fixe"] .grain {
+  opacity: 0.05;
+}
+
+.flake {
+  position: absolute;
+  top: -12px;
+  border-radius: 50%;
+  background: #fff;
+  opacity: 0.85;
+  animation: fall linear infinite;
+}
+.letter {
+  position: absolute;
+  bottom: -8%;
+  font-family: var(--serif);
+  color: rgba(222, 180, 92, 0.38);
+  animation: rise linear infinite;
+}
+.mote {
+  position: absolute;
+  bottom: -4%;
+  border-radius: 50%;
+  background: rgba(255, 236, 200, 0.8);
+  animation: rise linear infinite;
+}
+.mote.warm {
+  background: rgba(255, 238, 170, 0.9);
+}

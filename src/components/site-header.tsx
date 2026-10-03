@@ -1,0 +1,32 @@
+import Link from "next/link";
+import type { Viewer } from "@/lib/auth";
+import { BrandMark } from "./emblem";
+import { HeaderControls } from "./header-controls";
+import { NavLink } from "./nav-link";
+
+export function SiteHeader({ viewer }: { viewer: Viewer | null }) {
+  return (
+    <header className="top">
+      <Link className="brand" href={viewer?.hasAccess ? "/cours" : "/"}>
+        <BrandMark />
+        <span>JuriQuizz</span>
+      </Link>
+      <nav className="nav" aria-label="Navigation principale">
+        {viewer ? (
+          <>
+            <NavLink href="/cours">Cours</NavLink>
+            <NavLink href="/progression">Progression</NavLink>
+            <NavLink href="/compte">Compte</NavLink>
+            {viewer.isAdmin && <NavLink href="/admin">Admin</NavLink>}
+          </>
+        ) : (
+          <>
+            <NavLink href="/connexion">Connexion</NavLink>
+            <NavLink href="/inscription">Créer un compte</NavLink>
+          </>
+        )}
+      </nav>
+      <HeaderControls />
+    </header>
+  );
+}
