@@ -1,5 +1,5 @@
 import { existsSync, readFileSync } from "node:fs";
-import { describe, expect, it } from "vitest";
+import { beforeAll, describe, expect, it } from "vitest";
 import { countQuestions, toImportPayload } from "./payload";
 import { slugify, validateSource } from "./source";
 
@@ -95,8 +95,13 @@ describe("toImportPayload", () => {
   });
 });
 
+// Le contenu réel n'est pas versionné : ces tests ne tournent que là où le fichier est présent.
 describe.runIf(existsSync(REAL_FILE))("contenu réel (content/questions.json)", () => {
-  const raw = JSON.parse(readFileSync(REAL_FILE, "utf8"));
+  // Lu dans beforeAll, et non à la collecte des tests : sans fichier, la suite est simplement ignorée.
+  let raw: { chapitres: Record<string, unknown>[] };
+  beforeAll(() => {
+    raw = JSON.parse(readFileSync(REAL_FILE, "utf8"));
+  });
 
   it("est valide et contient 108 questions sur 4 chapitres et 3 niveaux", () => {
     const result = validateSource(raw);
