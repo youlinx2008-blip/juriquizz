@@ -94,7 +94,7 @@ export default async function AdminQuestionPage({ params }: PageProps<"/admin/qu
         <h2 style={{ fontSize: "1.05rem", marginTop: 22 }}>
           Réponses choisies ({totalAnswers}, premières tentatives)
         </h2>
-        <div className="table-wrap">
+        <div className="table-wrap" role="region" aria-label="Réponses choisies" tabIndex={0}>
           <table className="data">
             <tbody>
               {options.map((option, index) => {

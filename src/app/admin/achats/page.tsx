@@ -52,7 +52,7 @@ export default async function AdminPurchasesPage() {
         {payments.length === 0 ? (
           <p style={{ margin: 0 }}>Aucun achat pour l&rsquo;instant.</p>
         ) : (
-          <div className="table-wrap">
+          <div className="table-wrap" role="region" aria-label="Liste des achats" tabIndex={0}>
             <table className="data">
               <thead>
                 <tr>

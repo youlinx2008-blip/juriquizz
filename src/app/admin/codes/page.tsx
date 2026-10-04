@@ -46,7 +46,7 @@ export default async function AdminCodesPage({ searchParams }: PageProps<"/admin
         <h2 id="liste-codes" style={{ marginTop: 0 }}>
           Codes existants
         </h2>
-        <div className="table-wrap">
+        <div className="table-wrap" role="region" aria-label="Codes bêta" tabIndex={0}>
           <table className="data">
             <thead>
               <tr>

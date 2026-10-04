@@ -84,7 +84,7 @@ export default async function AccountPage() {
           <h2 id="achats-titre" style={{ marginTop: 0 }}>
             Mes achats
           </h2>
-          <div className="table-wrap">
+          <div className="table-wrap" role="region" aria-label="Mes achats" tabIndex={0}>
             <table className="data">
               <thead>
                 <tr>

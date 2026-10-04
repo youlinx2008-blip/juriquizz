@@ -1,8 +1,10 @@
 import type { Metadata, Viewport } from "next";
+import { headers } from "next/headers";
 import { DecorStage } from "@/components/decor-stage";
 import { InlineScript } from "@/components/inline-script";
 import { PageWrap } from "@/components/page-wrap";
 import { PendingAttempts } from "@/components/pending-attempts";
+import { NonceProvider } from "@/components/providers/nonce-provider";
 import { PrefsProvider } from "@/components/providers/prefs-provider";
 import { SceneProvider } from "@/components/providers/scene-provider";
 import { SoundProvider } from "@/components/providers/sound-provider";
@@ -41,30 +43,34 @@ export const viewport: Viewport = {
 
 export default async function RootLayout({ children }: LayoutProps<"/">) {
   const viewer = await getViewer();
+  // Nonce de la politique de sécurité du contenu, posé par le proxy pour cette requête.
+  const nonce = (await headers()).get("x-nonce") ?? undefined;
   return (
     <html lang="fr" data-scene={HOME_DECOR} suppressHydrationWarning>
       <head>
-        <InlineScript html={PREFS_BOOT_SCRIPT} />
+        <InlineScript html={PREFS_BOOT_SCRIPT} nonce={nonce} />
       </head>
       <body>
         <a className="skip-link" href="#contenu">
           Aller au contenu
         </a>
-        <PrefsProvider signedIn={viewer !== null} profilePrefs={viewer?.profilePrefs ?? null}>
-          <SceneProvider>
-            <SoundProvider>
-              <DecorStage />
-              <PageWrap>
-                <SiteHeader viewer={viewer} />
-                <TermsBanner viewer={viewer} />
-                <main id="contenu" tabIndex={-1}>
-                  {children}
-                </main>
-                <SiteFooter />
-              </PageWrap>
-            </SoundProvider>
-          </SceneProvider>
-        </PrefsProvider>
+        <NonceProvider nonce={nonce}>
+          <PrefsProvider signedIn={viewer !== null} profilePrefs={viewer?.profilePrefs ?? null}>
+            <SceneProvider>
+              <SoundProvider>
+                <DecorStage />
+                <PageWrap>
+                  <SiteHeader viewer={viewer} />
+                  <TermsBanner viewer={viewer} />
+                  <main id="contenu" tabIndex={-1}>
+                    {children}
+                  </main>
+                  <SiteFooter />
+                </PageWrap>
+              </SoundProvider>
+            </SceneProvider>
+          </PrefsProvider>
+        </NonceProvider>
         <ServiceWorker />
         {viewer && <PendingAttempts userId={viewer.userId} />}
         <noscript>JuriQuizz a besoin de JavaScript pour les quiz.</noscript>

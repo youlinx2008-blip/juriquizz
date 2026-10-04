@@ -9,16 +9,36 @@ import {
   isAuthPath,
   isDeviceId,
 } from "@/lib/devices";
+import { contentSecurityPolicy, createNonce } from "@/lib/csp";
 import { supabaseEnv } from "@/lib/supabase/env";
 
 /**
- * À chaque requête de page : rafraîchit la session Supabase (jetons dans les cookies) et vérifie,
- * de temps en temps, que l'appareil fait partie des deux appareils autorisés du compte.
+ * À chaque requête de page : politique de sécurité du contenu (nonce propre à la requête),
+ * rafraîchissement de la session Supabase (jetons dans les cookies) et vérification, de temps en
+ * temps, que l'appareil fait partie des deux appareils autorisés du compte.
  * Les contrôles d'accès au contenu sont faits dans les pages et par la RLS.
  */
 export async function proxy(request: NextRequest) {
-  let response = NextResponse.next({ request });
   const { url, key } = supabaseEnv();
+  const secure = request.nextUrl.protocol === "https:";
+  const nonce = createNonce();
+  const policy = contentSecurityPolicy({
+    nonce,
+    supabaseUrl: url,
+    secure,
+    dev: process.env.NODE_ENV === "development",
+  });
+  // Next.js lit le nonce dans la politique transmise avec la requête et l'applique à ses scripts ;
+  // les cookies de session éventuellement renouvelés font partie des en-têtes recopiés.
+  const forward = () => {
+    const headers = new Headers(request.headers);
+    headers.set("x-nonce", nonce);
+    headers.set("content-security-policy", policy);
+    const next = NextResponse.next({ request: { headers } });
+    next.headers.set("content-security-policy", policy);
+    return next;
+  };
+  let response = forward();
   const supabase = createServerClient(url, key, {
     cookies: {
       getAll() {
@@ -26,7 +46,7 @@ export async function proxy(request: NextRequest) {
       },
       setAll(cookiesToSet, headers) {
         cookiesToSet.forEach(({ name, value }) => request.cookies.set(name, value));
-        response = NextResponse.next({ request });
+        response = forward();
         cookiesToSet.forEach(({ name, value, options }) => response.cookies.set(name, value, options));
         Object.entries(headers).forEach(([header, value]) => response.headers.set(header, value));
       },
@@ -34,7 +54,6 @@ export async function proxy(request: NextRequest) {
   });
   const { data } = await supabase.auth.getClaims();
   const userId = data?.claims?.sub;
-  const secure = request.nextUrl.protocol === "https:";
 
   // Identifiant du navigateur, posé avant la connexion (pour qu'un même navigateur reste un appareil).
   let browserKey = request.cookies.get(DEVICE_COOKIE)?.value;

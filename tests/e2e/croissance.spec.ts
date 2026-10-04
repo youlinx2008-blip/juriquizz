@@ -179,6 +179,7 @@ test.describe("Pass Année Premium et parrainage (sur ordinateur)", () => {
     await expect(row).toContainText("Exclusivité du Pass Année Premium");
     await page.goto(`/cours/${subject.slug}/${premiumChapter.slug}`);
     await expect(page.getByRole("heading", { name: "Chapitre réservé au Pass Année Premium" })).toBeVisible();
+    await audit(page, "chapitre Premium verrouillé");
     await page.goto("/examens");
     await expect(page.getByRole("link", { name: `Premium : ${premiumExam.title}` })).toBeVisible();
 
@@ -198,6 +199,7 @@ test.describe("Pass Année Premium et parrainage (sur ordinateur)", () => {
     await expect(summary).toContainText(`Pass Année en cours déduit−${formatEuros(pass!.amount_cents)}`);
     await expect(summary).toContainText(`À payer${formatEuros(due)} TTC`);
     await expect(page.getByRole("button", { name: `Payer ${formatEuros(due)}` })).toBeVisible();
+    await audit(page, "commande avec réduction");
 
     const premiumId = await buy(page, "premium");
     const { data: paid } = await service.from("payments").select("amount_cents").eq("id", premiumId).single();

@@ -42,7 +42,11 @@ export async function submitExamAction(
   resultHref: string,
 ): Promise<{ ok: false; message: string }> {
   const id = z.uuid().safeParse(attemptId);
-  const parsed = z.record(z.string().max(120), z.string().max(4)).safeParse(answers);
+  // Une réponse par question de l'épreuve (100 au plus) : rien de plus n'est transmis à la base.
+  const parsed = z
+    .record(z.string().max(120), z.string().max(4))
+    .refine((value) => Object.keys(value).length <= 100)
+    .safeParse(answers);
   if (!id.success || !parsed.success || !resultHref.startsWith("/examens/")) {
     return { ok: false, message: "Copie invalide." };
   }

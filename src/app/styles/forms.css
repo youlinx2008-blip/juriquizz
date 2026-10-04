@@ -73,7 +73,8 @@ fieldset.field {
   margin-bottom: 14px;
 }
 .tabs .chip[aria-pressed="true"],
-.tabs .chip[aria-selected="true"] {
+.tabs .chip[aria-selected="true"],
+.tabs .chip[aria-current="page"] {
   border-color: var(--accent);
   color: var(--accent);
   font-weight: 700;

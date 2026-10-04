@@ -36,7 +36,7 @@ const examSchema = z.object({
     .min(5, "5 minutes au moins.")
     .max(240, "4 heures au plus."),
   levels: z.array(z.enum(LEVEL_IDS)).min(1, "Choisis au moins un niveau."),
-  chapterIds: z.array(z.uuid()),
+  chapterIds: z.array(z.uuid()).max(200),
   position: z.coerce.number().int().min(0).max(1000).default(0),
 });
 

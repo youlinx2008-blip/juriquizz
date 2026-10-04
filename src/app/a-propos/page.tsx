@@ -47,12 +47,14 @@ export default function AboutPage() {
         <ul>
           <li>
             Ce qui est conservé : ton adresse e-mail, ton pseudo, tes réglages, tes scores et tes réponses aux
-            quiz, les retours que tu envoies, les appareils connectés à ton compte et, si tu lis les cours en
-            PDF, ton nom (imprimé en filigrane) et la date de tes lectures. Avec un pass : tes achats.
+            quiz et aux examens blancs, les retours que tu envoies, les appareils connectés à ton compte et,
+            si tu lis les cours en PDF, ton nom (imprimé en filigrane) et la date de tes lectures. Avec un
+            pass : tes achats. Avec le parrainage : le compte qui t&rsquo;a invité et les avantages accordés.
           </li>
           <li>
             À quoi ça sert : faire fonctionner ton compte, garder ta progression, améliorer les questions,
-            protéger les cours contre la diffusion.
+            protéger les cours contre la diffusion, accorder les avantages du parrainage sans abus (deux
+            comptes utilisés sur le même appareil n&rsquo;en profitent pas).
           </li>
           <li>
             Aucune publicité, aucun cookie de suivi : seuls les cookies de connexion et d&rsquo;appareil sont

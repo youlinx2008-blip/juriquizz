@@ -591,6 +591,9 @@ isOneToOne: false
 "revoke_device":
 { Args: { "p_device": string }; Returns: undefined
                            },
+"schema_version":
+{ Args: Record<PropertyKey, never>; Returns: string
+                           },
 "start_checkout":
 { Args: { "p_accept_cgv": boolean,"p_plan": Database["public"]['Enums']["plan"],"p_waive_withdrawal": boolean }; Returns: Json
                            },

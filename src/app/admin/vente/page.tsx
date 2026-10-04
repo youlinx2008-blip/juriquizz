@@ -170,7 +170,13 @@ export default async function AdminSalesPage() {
           </p>
         )}
         {sessions.length > 0 && (
-          <div className="table-wrap" style={{ marginBottom: 14 }}>
+          <div
+            className="table-wrap"
+            role="region"
+            aria-label="Sessions de partiels"
+            tabIndex={0}
+            style={{ marginBottom: 14 }}
+          >
             <table className="data">
               <thead>
                 <tr>

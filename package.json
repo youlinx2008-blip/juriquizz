@@ -15,6 +15,7 @@
     "content:import": "tsx scripts/import-content.ts",
     "content:verify": "tsx scripts/verify-content.ts",
     "admin:add": "tsx scripts/add-admin.ts",
+    "preflight": "tsx scripts/preflight.ts",
     "db:start": "supabase start",
     "db:reset": "supabase db reset",
     "db:types": "supabase gen types typescript --local > src/lib/supabase/database.types.ts && prettier --write src/lib/supabase/database.types.ts",

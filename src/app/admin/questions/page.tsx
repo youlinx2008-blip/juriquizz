@@ -130,7 +130,7 @@ export default async function AdminQuestionsPage({ searchParams }: PageProps<"/a
           {rows.length} question(s). Mini-quiz de démonstration : {demoCount} question(s) relue(s) ; seules
           les questions relues y figurent, et elles sont visibles de tout compte, même sans pass.
         </p>
-        <div className="table-wrap">
+        <div className="table-wrap" role="region" aria-label="Questions" tabIndex={0}>
           <table className="data">
             <thead>
               <tr>

@@ -96,7 +96,13 @@ export default async function ProgressPage() {
               {subject.title}
             </h2>
           </div>
-          <div className="table-wrap" style={{ padding: "0 22px 18px" }}>
+          <div
+            className="table-wrap"
+            role="region"
+            aria-label={`Scores : ${subject.title}`}
+            tabIndex={0}
+            style={{ padding: "0 22px 18px" }}
+          >
             <table className="data">
               <caption className="visually-hidden">Scores par chapitre et par niveau</caption>
               <thead>

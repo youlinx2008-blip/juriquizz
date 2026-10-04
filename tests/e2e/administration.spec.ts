@@ -1,3 +1,4 @@
+import AxeBuilder from "@axe-core/playwright";
 import { expect, test, type Browser, type Page } from "@playwright/test";
 import { answer, logIn, nextQuestion, questionsOf, run, signUp, uniqueEmail, wrongOption } from "./support";
 
@@ -159,5 +160,33 @@ test("les réglages de la phase 2 proposent les clauses des CGV", async ({ brows
   await expect(admin.locator(".clause").first()).toContainText("7 jours d'accès offerts");
   await admin.goto("/admin/vente");
   await expect(admin.getByText(/Exclusivités réellement disponibles : \d+/)).toBeVisible();
+  await admin.context().close();
+});
+
+test("les pages d'administration n'ont pas de défaut d'accessibilité détectable", async ({ browser }) => {
+  const admin = await adminPage(browser);
+  await admin.addInitScript(() => localStorage.setItem("jq-prefs", JSON.stringify({ decor: "fixe" })));
+  for (const path of [
+    "/admin",
+    "/admin/questions",
+    "/admin/matieres",
+    "/admin/cours",
+    "/admin/examens",
+    "/admin/vente",
+    "/admin/achats",
+    "/admin/reglages",
+    "/admin/textes",
+    "/admin/codes",
+    "/admin/retours",
+  ]) {
+    await admin.goto(path);
+    const results = await new AxeBuilder({ page: admin })
+      .withTags(["wcag2a", "wcag2aa", "wcag21a", "wcag21aa"])
+      .analyze();
+    expect(
+      results.violations.map((v) => `${v.id} (${v.nodes.length}) : ${v.help}`),
+      path,
+    ).toEqual([]);
+  }
   await admin.context().close();
 });

@@ -2,7 +2,13 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import { GrowthSettingsForm } from "@/components/admin/sales-forms";
 import { SceneSetter } from "@/components/scene-setter";
-import { mentions, PREMIUM_CLAUSE, referralClause } from "@/lib/legal-clauses";
+import {
+  mentions,
+  PREMIUM_CLAUSE,
+  PRIVACY_EXAMS_CLAUSE,
+  PRIVACY_REFERRAL_CLAUSE,
+  referralClause,
+} from "@/lib/legal-clauses";
 import { createClient } from "@/lib/supabase/server";
 
 export const metadata: Metadata = { title: "Réglages" };
@@ -23,6 +29,12 @@ export default async function AdminSettingsPage() {
     supabase.from("legal_pages").select("body").eq("slug", "cgv").maybeSingle(),
     supabase.from("plans").select("on_sale").eq("id", "pass_annee_premium").maybeSingle(),
   ]);
+  const [privacyResult, examsResult] = await Promise.all([
+    supabase.from("legal_pages").select("body").eq("slug", "confidentialite").maybeSingle(),
+    supabase.from("mock_exams").select("id", { count: "exact", head: true }).eq("visible", true),
+  ]);
+  const privacy = privacyResult.data?.body ?? "";
+  const examsOffered = (examsResult.count ?? 0) > 0;
   if (settingsResult.error) throw new Error(settingsResult.error.message);
   const settings = settingsResult.data;
   if (!settings) throw new Error("Réglages introuvables.");
@@ -39,7 +51,8 @@ export default async function AdminSettingsPage() {
       <section className="paper pad">
         <h1 className="title small">Réglages</h1>
         <p className="lead">
-          Déblocage progressif des niveaux et parrainage. Les changements s&rsquo;appliquent immédiatement.
+          Déblocage progressif des niveaux et parrainage, et ce qu&rsquo;ils demandent d&rsquo;ajouter aux
+          textes légaux. Les changements s&rsquo;appliquent immédiatement.
         </p>
       </section>
 
@@ -92,6 +105,35 @@ export default async function AdminSettingsPage() {
             Clause proposée : Pass Année Premium (article « Offres »)
           </summary>
           <pre className="clause">{PREMIUM_CLAUSE}</pre>
+        </details>
+      </section>
+
+      <section className="paper pad" aria-labelledby="reglages-confidentialite">
+        <h2 id="reglages-confidentialite" style={{ marginTop: 0 }}>
+          Politique de confidentialité
+        </h2>
+        <p className="fine" style={{ marginBottom: 12 }}>
+          Les examens blancs et le parrainage conservent de nouvelles données ; le parrainage réutilise
+          l&rsquo;identifiant d&rsquo;appareil pour éviter les abus. À ajouter à la rubrique « Données
+          conservées et finalités », depuis la page <Link href="/admin/textes">Textes légaux</Link>.
+        </p>
+        {examsOffered && !mentions(privacy, "examen") && (
+          <p className="notice warn" style={{ marginBottom: 12 }}>
+            Des examens blancs sont proposés, mais la politique de confidentialité n&rsquo;en parle pas.
+          </p>
+        )}
+        {settings.referral_enabled && !mentions(privacy, "parrain") && (
+          <p className="notice warn" style={{ marginBottom: 12 }}>
+            Le parrainage est ouvert, mais la politique de confidentialité n&rsquo;en parle pas.
+          </p>
+        )}
+        <details>
+          <summary style={{ cursor: "pointer", fontWeight: 600 }}>Rubrique proposée : examens blancs</summary>
+          <pre className="clause">{PRIVACY_EXAMS_CLAUSE}</pre>
+        </details>
+        <details style={{ marginTop: 10 }}>
+          <summary style={{ cursor: "pointer", fontWeight: 600 }}>Rubrique proposée : parrainage</summary>
+          <pre className="clause">{PRIVACY_REFERRAL_CLAUSE}</pre>
         </details>
       </section>
     </>

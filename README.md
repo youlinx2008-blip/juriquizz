@@ -82,6 +82,7 @@ en ligne de commande de Stripe) et reporter le secret affiché dans `STRIPE_WEBH
 | `npm run content:verify -- <fichier>`                                                       | Vérifie que la base contient exactement le fichier                                          |
 | `npm run beta:code -- [--utilisations=N] [--libelle=…] [--code=…] [--fin-acces=AAAA-MM-JJ]` | Crée un code bêta                                                                           |
 | `npm run admin:add -- <email> [--retirer]`                                                  | Donne ou retire le rôle d'administrateur                                                    |
+| `npm run preflight [-- --sans-site]`                                                        | Vérification avant mise en ligne (configuration, base, contenu, vente, Stripe, site)        |
 | `npm run db:reset`, `npm run db:types`                                                      | Recrée la base locale, régénère les types TypeScript                                        |
 
 Les tests de parcours construisent l'application (port 3100) et lancent un **faux Stripe** local
@@ -90,6 +91,14 @@ celles de Stripe, sans aucune clé réelle. Le temps des tests, ils ouvrent la v
 dates de partiels), déposent un PDF d'exemple, créent une matière avec un chapitre Premium et deux examens
 blancs, ouvrent le parrainage et créent leurs comptes ; tout est effacé ou rétabli à la fin.
 Pour les jouer sur le vrai contenu : `E2E_CONTENT=content/questions.json npm run test:e2e`.
+
+Sur GitHub, chaque envoi déclenche deux vérifications : lint, types, tests de logique et construction ; puis,
+sur une base Supabase locale, les tests de la base et tous les parcours Playwright (rapport joint en cas
+d'échec).
+
+**Performances mesurées** (téléphone d'entrée de gamme simulé, Lighthouse mobile) : 97 à 99 en performances,
+100 en accessibilité et en bonnes pratiques sur l'accueil, le catalogue et un quiz ; décor animé à 60 images
+par seconde avec un processeur ralenti six fois ; environ 160 Ko de JavaScript compressé par page.
 
 ## Mise en production
 
@@ -129,14 +138,43 @@ Pour les jouer sur le vrai contenu : `E2E_CONTENT=content/questions.json npm run
      dans `/admin/reglages`) ; fixer son prix (35 € par défaut) et cocher « En vente » dans `/admin/vente`. Il
      n'apparaît sur la page Tarifs qu'avec deux exclusivités réellement disponibles ;
    - **Parrainage** : ajouter la clause aux CGV (proposée dans `/admin/reglages`), régler la réduction du
-     filleul (2 € par défaut), les jours offerts au parrain (7) et le plafond annuel (10), puis l'ouvrir.
+     filleul (2 € par défaut), les jours offerts au parrain (7) et le plafond annuel (10), puis l'ouvrir ;
+   - **politique de confidentialité** : y ajouter les examens blancs et le parrainage (rubriques proposées dans
+     `/admin/reglages`).
+8. **Vérifier** avant d'annoncer le site, depuis votre machine avec les variables de la production (comme pour
+   l'import) : `npm run preflight`. Le script ne modifie rien ; il contrôle les variables (aucune clé secrète
+   en `NEXT_PUBLIC_`), la version du schéma, le stockage privé, l'administrateur, le contenu (questions relues,
+   démonstration), les textes légaux, les offres et dates de partiels, le compte et le webhook Stripe, et le
+   site en ligne (réponse, politique de sécurité, HSTS, configuration de paiement du serveur). Il signale aussi
+   une offre de la phase 2 ouverte sans la clause correspondante.
+9. **Premier achat réel** : avec la clé Stripe de production, acheter un Pass Mensuel avec votre propre carte,
+   vérifier l'accès, le reçu et la page « Achats », puis le rembourser depuis le tableau de bord Stripe : l'accès
+   se ferme de lui-même.
+
+### Base déjà en service : montée de version
+
+`npx supabase db push` applique seulement les migrations manquantes ; faire d'abord une sauvegarde (tableau de
+bord Supabase, « Database », « Backups »). La montée de la phase 1 à la phase 2 a été rejouée sur une base
+contenant des comptes, des parties, des achats et des retours : tout est conservé, les chapitres déjà publiés
+restent dans tous les pass, et un Pass Année en cours ouvre le passage au Premium au prix de la différence.
+**Le déblocage des niveaux s'applique aussitôt** : un étudiant qui n'a pas encore réussi un niveau à 70 % voit
+le suivant verrouillé (les parties déjà jouées comptent). Pour l'annoncer avant de l'activer, le décocher dans
+`/admin/reglages` le temps de prévenir les étudiants.
 
 ## Choix techniques
 
 - **Sécurité** : toutes les tables sont protégées par la RLS ; les écritures sensibles passent par des fonctions
   SQL qui vérifient l'appelant. Le score est recalculé par la base. Les administrateurs sont listés dans la table
   `admins` (modifiable seulement avec la clé secrète). La clé secrète sert sur le serveur à deux choses
-  seulement : confirmer les paiements et lire les PDF originaux.
+  seulement : confirmer les paiements et lire les PDF originaux. Chaque fonction de la base n'est exécutable
+  que par les rôles qui en ont besoin (six seulement pour les visiteurs) ; `tests/db/securite.test.ts` vérifie
+  ces listes, la RLS de chaque table et le stockage privé : **une nouvelle fonction doit retirer le droit
+  d'exécution à `public` et `anon`, puis accorder explicitement ce qu'il faut**. Limites quotidiennes contre
+  les envois en rafale (parties, retours, épreuves, paiements, lectures de PDF).
+- **En-têtes** : politique de sécurité du contenu avec un nonce propre à chaque requête (`src/proxy.ts` :
+  scripts du site seulement, connexions vers le site et Supabase, aucune intégration dans un autre site), HSTS,
+  `X-Frame-Options`, `nosniff`, `Cross-Origin-Opener-Policy`. Un parcours vérifie qu'aucune page (lecteur de PDF
+  compris) n'est bloquée par la politique.
 - **Paiement** : à la commande, la base fige le prix et la date de fin, après l'acceptation des CGV et la
   renonciation expresse au droit de rétractation (contenu numérique fourni immédiatement, art. L221-28 13° du
   Code de la consommation), dont la version et la date sont enregistrées. L'accès s'ouvre au retour de la page

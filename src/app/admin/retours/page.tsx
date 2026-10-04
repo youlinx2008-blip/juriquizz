@@ -44,20 +44,10 @@ export default async function AdminFeedbackPage({ searchParams }: PageProps<"/ad
       <section className="paper pad">
         <h1 className="title small">Retours sur les questions</h1>
         <div className="tabs">
-          <Link
-            className="chip"
-            href="/admin/retours"
-            aria-current={showAll ? undefined : "page"}
-            aria-pressed={!showAll}
-          >
+          <Link className="chip" href="/admin/retours" aria-current={showAll ? undefined : "page"}>
             À traiter
           </Link>
-          <Link
-            className="chip"
-            href="/admin/retours?vue=tous"
-            aria-current={showAll ? "page" : undefined}
-            aria-pressed={showAll}
-          >
+          <Link className="chip" href="/admin/retours?vue=tous" aria-current={showAll ? "page" : undefined}>
             Tous
           </Link>
         </div>
