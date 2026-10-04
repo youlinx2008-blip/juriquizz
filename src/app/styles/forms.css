@@ -1,0 +1,184 @@
+/* Formulaires, tableaux d'administration. */
+.form {
+  display: grid;
+  gap: 14px;
+}
+.field {
+  display: grid;
+  gap: 6px;
+}
+.field label,
+.field legend {
+  font-weight: 600;
+}
+.field .help {
+  font-size: 0.88rem;
+  color: var(--ink2);
+  margin: 0;
+}
+.field input[type="text"],
+.field input[type="email"],
+.field input[type="password"],
+.field input[type="number"],
+.field input[type="datetime-local"],
+.field input[type="date"],
+.field select,
+.field textarea,
+.feedback textarea,
+.input {
+  width: 100%;
+  padding: 10px 12px;
+  border-radius: 10px;
+  border: 1px solid var(--line);
+  background: var(--paper-solid);
+  min-height: 44px;
+}
+.field input:focus-visible,
+.field select:focus-visible,
+.field textarea:focus-visible {
+  outline-offset: 0;
+}
+.field input[aria-invalid="true"] {
+  border-color: var(--bad);
+}
+fieldset.field {
+  border: 0;
+  padding: 0;
+  margin: 0;
+}
+.radios {
+  display: grid;
+  gap: 8px;
+}
+.radios label {
+  font-weight: 400;
+  display: flex;
+  gap: 8px;
+  align-items: flex-start;
+}
+.code-input {
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  font-variant-numeric: tabular-nums;
+}
+.form-error {
+  color: var(--bad);
+  margin: 0;
+  font-weight: 600;
+}
+.tabs {
+  display: flex;
+  gap: 6px;
+  flex-wrap: wrap;
+  margin-bottom: 14px;
+}
+.tabs .chip[aria-pressed="true"],
+.tabs .chip[aria-selected="true"],
+.tabs .chip[aria-current="page"] {
+  border-color: var(--accent);
+  color: var(--accent);
+  font-weight: 700;
+}
+
+.table-wrap {
+  overflow-x: auto;
+}
+table.data {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 0.92rem;
+}
+table.data th,
+table.data td {
+  text-align: left;
+  padding: 8px 10px;
+  border-bottom: 1px solid var(--line);
+  vertical-align: top;
+}
+table.data th {
+  font-size: 0.82rem;
+  color: var(--ink2);
+  font-weight: 600;
+  white-space: nowrap;
+}
+table.data td.num-cell {
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
+}
+.pill {
+  display: inline-block;
+  padding: 1px 8px;
+  border-radius: 999px;
+  border: 1px solid var(--line);
+  font-size: 0.8rem;
+  white-space: nowrap;
+}
+.pill.relue {
+  border-color: var(--good);
+  color: var(--good);
+}
+.pill.a_relire {
+  border-color: var(--warn);
+  color: var(--warn);
+}
+.pill.a_corriger {
+  border-color: var(--bad);
+  color: var(--bad);
+}
+.rate-low {
+  color: var(--bad);
+  font-weight: 700;
+}
+.stats-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
+  gap: 10px;
+}
+.stat {
+  padding: 12px 14px;
+  border: 1px solid var(--line);
+  border-radius: 10px;
+  background: var(--paper2);
+}
+.stat b {
+  display: block;
+  font-size: 1.5rem;
+  font-family: var(--serif);
+}
+.stat span {
+  color: var(--ink2);
+  font-size: 0.88rem;
+}
+.inline-form {
+  display: inline-flex;
+  gap: 6px;
+  align-items: center;
+  flex-wrap: wrap;
+}
+.filters {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  align-items: end;
+  margin-bottom: 14px;
+}
+.filters .field {
+  min-width: 150px;
+}
+.bar-h {
+  height: 8px;
+  background: var(--line);
+  border-radius: 4px;
+  overflow: hidden;
+  min-width: 80px;
+}
+.bar-h i {
+  display: block;
+  height: 100%;
+  background: var(--accent);
+}
+textarea.mono {
+  font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+  font-size: 0.88rem;
+  line-height: 1.45;
+}

@@ -1,0 +1,235 @@
+/* Vente : tarifs, commande, achats ; cours en PDF : aperçu et lecteur. */
+.row.offer {
+  grid-template-columns: 1fr auto auto;
+}
+.offer h2 {
+  margin: 0;
+  font-family: var(--serif);
+  font-size: 1.3rem;
+}
+.offer p {
+  margin: 2px 0 0;
+  color: var(--ink2);
+  font-size: 0.93rem;
+}
+.price {
+  margin: 0;
+  display: grid;
+  justify-items: end;
+  text-align: right;
+  line-height: 1.15;
+  white-space: nowrap;
+}
+.price b {
+  font-family: var(--serif);
+  font-size: 1.8rem;
+}
+.price s {
+  color: var(--ink2);
+  font-size: 0.95rem;
+}
+.price small {
+  color: var(--ink2);
+  font-size: 0.8rem;
+}
+.exclusives {
+  margin: 8px 0 0;
+  padding-left: 20px;
+  font-size: 0.93rem;
+}
+.exclusives span {
+  color: var(--ink2);
+}
+.personal-price {
+  color: var(--ink);
+}
+@media (max-width: 560px) {
+  .row.offer {
+    grid-template-columns: 1fr auto;
+  }
+}
+
+.order-summary {
+  display: grid;
+  gap: 4px 16px;
+  grid-template-columns: auto 1fr;
+  margin: 0;
+}
+.order-summary dt {
+  color: var(--ink2);
+}
+.order-summary dd {
+  margin: 0;
+  font-weight: 600;
+}
+.fine {
+  margin: 0;
+  font-size: 0.88rem;
+  color: var(--ink2);
+}
+.consents {
+  display: grid;
+  gap: 10px;
+}
+.consents label {
+  display: flex;
+  gap: 10px;
+  align-items: flex-start;
+  font-weight: 400;
+}
+.consents input {
+  margin-top: 4px;
+  width: 18px;
+  height: 18px;
+  flex: none;
+  accent-color: var(--accent);
+}
+
+/* Lecteur de cours en PDF. */
+.pdf-viewer {
+  display: grid;
+  gap: 12px;
+}
+.pdf-loading {
+  margin: 0;
+  color: var(--ink2);
+}
+.pdf-pages {
+  display: grid;
+  gap: 14px;
+  justify-items: center;
+  min-width: 0;
+}
+.pdf-page {
+  position: relative;
+  max-width: 100%;
+  background: #ffffff;
+  border-radius: 4px;
+  box-shadow: 0 4px 18px rgba(15, 18, 30, 0.25);
+  overflow: hidden;
+}
+.pdf-page canvas {
+  display: block;
+  width: 100%;
+  height: 100%;
+}
+/* Calque de texte (sélection, lecteurs d'écran) posé sur le dessin de la page. */
+.pdf-page .textLayer {
+  color-scheme: only light;
+  position: absolute;
+  inset: 0;
+  overflow: clip;
+  line-height: 1;
+  text-align: initial;
+  letter-spacing: normal;
+  word-spacing: normal;
+  text-size-adjust: none;
+  forced-color-adjust: none;
+  transform-origin: 0 0;
+  --min-font-size: 1;
+  --text-scale-factor: calc(var(--total-scale-factor) * var(--min-font-size));
+  --min-font-size-inv: calc(1 / var(--min-font-size));
+}
+.pdf-page .textLayer :is(span, br) {
+  color: transparent;
+  position: absolute;
+  white-space: pre;
+  cursor: text;
+  transform-origin: 0% 0%;
+}
+.pdf-page .textLayer > :not(.markedContent),
+.pdf-page .textLayer .markedContent span:not(.markedContent) {
+  --font-height: 0;
+  font-size: calc(var(--text-scale-factor) * var(--font-height));
+  --scale-x: 1;
+  --rotate: 0deg;
+  transform: rotate(var(--rotate)) scaleX(var(--scale-x)) scale(var(--min-font-size-inv));
+}
+.pdf-page .textLayer .markedContent {
+  display: contents;
+}
+.pdf-page .textLayer ::selection {
+  background: color-mix(in srgb, AccentColor, transparent 50%);
+  color: transparent;
+}
+
+/* Textes légaux. */
+.legal h2 {
+  font-size: 1.1rem;
+  margin: 22px 0 6px;
+}
+.legal ul {
+  padding-left: 20px;
+}
+.legal p,
+.legal li {
+  max-width: 70ch;
+}
+
+.terms-banner {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px 16px;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 14px;
+  padding-top: 14px;
+  padding-bottom: 14px;
+}
+
+/* Phase 2 : Premium, niveaux verrouillés, nouveautés. */
+.pill.premium {
+  border-color: var(--accent);
+  color: var(--accent);
+  font-weight: 700;
+}
+.pill.locked {
+  color: var(--ink2);
+}
+.pill.new {
+  border-color: var(--good);
+  color: var(--good);
+  font-weight: 700;
+}
+.title-pill {
+  margin-left: 10px;
+  vertical-align: middle;
+  font-family: system-ui, sans-serif;
+  font-size: 0.75rem;
+  letter-spacing: 0;
+}
+.admin-chapters {
+  margin: 10px 0 0;
+  padding: 0;
+  list-style: none;
+}
+.admin-chapters li {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px 14px;
+  padding: 8px 0;
+  border-top: 1px solid var(--line);
+}
+.clause {
+  margin: 10px 0 0;
+  padding: 12px 14px;
+  border: 1px solid var(--line);
+  border-radius: 10px;
+  background: var(--paper2);
+  font-family: inherit;
+  font-size: 0.9rem;
+  line-height: 1.5;
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+}
+.share-link input {
+  width: 100%;
+  padding: 10px 12px;
+  border: 1px solid var(--line);
+  border-radius: 10px;
+  background: var(--paper2);
+  color: var(--ink);
+  font: inherit;
+}

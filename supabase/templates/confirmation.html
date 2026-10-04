@@ -1,0 +1,10 @@
+<!doctype html>
+<html lang="fr">
+  <body style="font-family: system-ui, sans-serif; color: #1f2430; line-height: 1.5">
+    <h1 style="font-size: 20px">Bienvenue sur JuriQuizz</h1>
+    <p>Pour confirmer ton adresse et ouvrir ton compte, clique sur ce lien :</p>
+    <p><a href="{{ .SiteURL }}/auth/confirm?token_hash={{ .TokenHash }}&amp;type=email">Confirmer mon adresse</a></p>
+    <p>Ou saisis ce code dans l&rsquo;application : <strong style="font-size: 18px; letter-spacing: 2px">{{ .Token }}</strong></p>
+    <p style="color: #575c6b; font-size: 13px">Si tu n&rsquo;as pas demandé de compte, ignore simplement ce message.</p>
+  </body>
+</html>

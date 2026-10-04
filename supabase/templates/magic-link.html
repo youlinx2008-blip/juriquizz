@@ -1,0 +1,10 @@
+<!doctype html>
+<html lang="fr">
+  <body style="font-family: system-ui, sans-serif; color: #1f2430; line-height: 1.5">
+    <h1 style="font-size: 20px">Connexion à JuriQuizz</h1>
+    <p>Pour te connecter, clique sur ce lien :</p>
+    <p><a href="{{ .SiteURL }}/auth/confirm?token_hash={{ .TokenHash }}&amp;type=email">Me connecter</a></p>
+    <p>Ou saisis ce code dans l&rsquo;application : <strong style="font-size: 18px; letter-spacing: 2px">{{ .Token }}</strong></p>
+    <p style="color: #575c6b; font-size: 13px">Ce lien et ce code expirent dans une heure. Si tu n&rsquo;as rien demandé, ignore ce message.</p>
+  </body>
+</html>

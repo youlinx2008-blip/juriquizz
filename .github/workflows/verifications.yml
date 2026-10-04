@@ -1,0 +1,61 @@
+name: Vérifications
+
+on:
+  push:
+  pull_request:
+
+jobs:
+  verifications:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+      - run: npm ci
+      - run: npm run lint
+      - run: npm run typecheck
+      - run: npm test
+      - run: npm run build
+        env:
+          NEXT_TELEMETRY_DISABLED: "1"
+
+  # Base de données (RLS, fonctions, migrations depuis zéro) et parcours Playwright complets, sur une
+  # base Supabase locale et le faux Stripe des tests : aucune clé réelle.
+  integration:
+    runs-on: ubuntu-latest
+    timeout-minutes: 45
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+      - run: npm ci
+      - name: Base Supabase locale
+        run: npx supabase start -x studio,imgproxy,edge-runtime,logflare,vector,supavisor,realtime,postgres-meta
+      - name: Variables de la base locale
+        run: |
+          eval "$(npx supabase status -o env)"
+          {
+            echo "NEXT_PUBLIC_SUPABASE_URL=$API_URL"
+            echo "NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY=$PUBLISHABLE_KEY"
+            echo "NEXT_PUBLIC_SITE_URL=http://localhost:3100"
+            echo "SUPABASE_SECRET_KEY=$SECRET_KEY"
+          } > .env.local
+      - run: npm run test:db
+      - name: Navigateur des tests
+        run: npx playwright install --with-deps chromium
+      - run: npm run test:e2e
+        env:
+          NEXT_TELEMETRY_DISABLED: "1"
+      - name: Rapport des parcours en échec
+        if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: rapport-playwright
+          path: |
+            playwright-report/
+            test-results/
+          retention-days: 7
