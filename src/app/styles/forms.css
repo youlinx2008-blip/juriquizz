@@ -176,3 +176,8 @@ table.data td.num-cell {
   height: 100%;
   background: var(--accent);
 }
+textarea.mono {
+  font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+  font-size: 0.88rem;
+  line-height: 1.45;
+}

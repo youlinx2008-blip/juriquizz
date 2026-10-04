@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { resolveFeedbackAction } from "@/app/actions/admin";
+import { setQuestionDemoAction } from "@/app/actions/admin-vente";
 import { REVIEW_LABELS, ReviewStatusForm } from "@/components/admin/review-status-form";
 import { SceneSetter } from "@/components/scene-setter";
 import { formatDayTime } from "@/lib/dates";
@@ -23,7 +24,7 @@ export default async function AdminQuestionPage({ params }: PageProps<"/admin/qu
   const { data: question, error } = await supabase
     .from("questions")
     .select(
-      "id, chapter_id, level, position, type, decor, prompt, options, correct_option, hint, explanation, review_status, reviewed_at, retired_at",
+      "id, chapter_id, level, position, type, decor, prompt, options, correct_option, hint, explanation, review_status, reviewed_at, retired_at, demo",
     )
     .eq("id", id)
     .maybeSingle();
@@ -77,6 +78,18 @@ export default async function AdminQuestionPage({ params }: PageProps<"/admin/qu
           )}
         </p>
         <ReviewStatusForm questionId={question.id} status={question.review_status} />
+        <form action={setQuestionDemoAction} className="inline-form" style={{ marginTop: 12 }}>
+          <input type="hidden" name="questionId" value={question.id} />
+          <input type="hidden" name="demo" value={question.demo ? "false" : "true"} />
+          <span>
+            {question.demo
+              ? "Dans le mini-quiz de démonstration (si relue)."
+              : "Pas dans le mini-quiz de démonstration."}
+          </span>
+          <button className="btn small" type="submit">
+            {question.demo ? "Retirer de la démo" : "Ajouter à la démo"}
+          </button>
+        </form>
 
         <h2 style={{ fontSize: "1.05rem", marginTop: 22 }}>
           Réponses choisies ({totalAnswers}, premières tentatives)

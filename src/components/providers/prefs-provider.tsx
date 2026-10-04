@@ -35,12 +35,17 @@ export function PrefsProvider({
   const saveTimer = useRef<ReturnType<typeof setTimeout> | undefined>(undefined);
   const unsaved = useRef<Prefs | null>(null);
   const profileKey = JSON.stringify(profilePrefs ?? {});
+  const appliedFor = useRef<boolean | null>(null);
 
+  // Les réglages du profil s'appliquent au chargement et à la connexion seulement : ceux renvoyés
+  // après chaque enregistrement peuvent être en retard d'un clic sur ceux de l'appareil.
   useEffect(() => {
+    if (appliedFor.current === signedIn) return;
+    appliedFor.current = signedIn;
     const fromProfile = JSON.parse(profileKey) as Partial<Prefs>;
     if (Object.keys(fromProfile).length) setPrefs(fromProfile);
     else setPrefs({});
-  }, [profileKey]);
+  }, [profileKey, signedIn]);
 
   const flush = useCallback(() => {
     clearTimeout(saveTimer.current);

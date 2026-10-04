@@ -12,19 +12,26 @@ export function SiteHeader({ viewer }: { viewer: Viewer | null }) {
         <span>JuriQuizz</span>
       </Link>
       <nav className="nav" aria-label="Navigation principale">
-        {viewer ? (
+        {viewer?.hasAccess ? (
           <>
             <NavLink href="/cours">Cours</NavLink>
             <NavLink href="/progression">Progression</NavLink>
             <NavLink href="/compte">Compte</NavLink>
-            {viewer.isAdmin && <NavLink href="/admin">Admin</NavLink>}
+          </>
+        ) : viewer ? (
+          <>
+            <NavLink href="/demo">Démo</NavLink>
+            <NavLink href="/tarifs">Tarifs</NavLink>
+            <NavLink href="/compte">Compte</NavLink>
           </>
         ) : (
           <>
+            <NavLink href="/tarifs">Tarifs</NavLink>
             <NavLink href="/connexion">Connexion</NavLink>
             <NavLink href="/inscription">Créer un compte</NavLink>
           </>
         )}
+        {viewer?.isAdmin && <NavLink href="/admin">Admin</NavLink>}
       </nav>
       <HeaderControls />
     </header>

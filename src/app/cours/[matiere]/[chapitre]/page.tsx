@@ -5,6 +5,7 @@ import { Emblem } from "@/components/emblem";
 import { SceneSetter } from "@/components/scene-setter";
 import { requireAccess } from "@/lib/auth";
 import { getChapter, getMyAttempts, getMyQuestionStatus, getVisibleQuestionRefs } from "@/lib/data/catalog";
+import { getDocument } from "@/lib/data/documents";
 import { LEVELS } from "@/lib/levels";
 import { openErrors, summarizeAttempts } from "@/lib/quiz/progress";
 import { createClient } from "@/lib/supabase/server";
@@ -24,10 +25,11 @@ export default async function ChapterPage({ params }: PageProps<"/cours/[matiere
   const found = await getChapter(supabase, matiere, chapitre);
   if (!found) notFound();
   const { subject, chapter } = found;
-  const [refs, attempts, statuses] = await Promise.all([
+  const [refs, attempts, statuses, document] = await Promise.all([
     getVisibleQuestionRefs(supabase, chapter.id),
     getMyAttempts(supabase, chapter.id),
     getMyQuestionStatus(supabase, chapter.id),
+    getDocument(supabase, chapter.id),
   ]);
   const progress = summarizeAttempts(attempts);
   const errors = openErrors(
@@ -97,6 +99,30 @@ export default async function ChapterPage({ params }: PageProps<"/cours/[matiere
           );
         })}
       </section>
+      {document && (
+        <section className="paper" aria-labelledby="cours-pdf-titre">
+          <div className="row">
+            <span className="num" aria-hidden="true">
+              §
+            </span>
+            <div>
+              <h2 id="cours-pdf-titre" style={{ margin: 0, fontSize: "1.1rem" }}>
+                Le cours en PDF
+              </h2>
+              <p>{document.title || chapter.title}</p>
+              <div className="meta">
+                <span>
+                  {document.pageCount} page{document.pageCount > 1 ? "s" : ""}
+                </span>
+                <span>Exemplaire personnel, à lire dans JuriQuizz</span>
+              </div>
+            </div>
+            <Link className="btn primary" href={`/cours/${subject.slug}/${chapter.slug}/lecture`}>
+              Lire le cours<span className="visually-hidden"> : {chapter.title}</span>
+            </Link>
+          </div>
+        </section>
+      )}
     </>
   );
 }

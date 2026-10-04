@@ -9,6 +9,7 @@ import { SoundProvider } from "@/components/providers/sound-provider";
 import { ServiceWorker } from "@/components/service-worker";
 import { SiteFooter } from "@/components/site-footer";
 import { SiteHeader } from "@/components/site-header";
+import { TermsBanner } from "@/components/terms-banner";
 import { getViewer } from "@/lib/auth";
 import { HOME_DECOR } from "@/lib/decors/registry";
 import { PREFS_BOOT_SCRIPT } from "@/lib/prefs";
@@ -17,6 +18,7 @@ import "./styles/decors.css";
 import "./styles/layout.css";
 import "./styles/quiz.css";
 import "./styles/forms.css";
+import "./styles/vente.css";
 
 export const metadata: Metadata = {
   title: { default: "JuriQuizz", template: "%s · JuriQuizz" },
@@ -54,6 +56,7 @@ export default async function RootLayout({ children }: LayoutProps<"/">) {
               <DecorStage />
               <PageWrap>
                 <SiteHeader viewer={viewer} />
+                <TermsBanner viewer={viewer} />
                 <main id="contenu" tabIndex={-1}>
                   {children}
                 </main>

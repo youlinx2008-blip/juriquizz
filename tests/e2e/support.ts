@@ -14,7 +14,19 @@ export type RunData = {
   content: ImportPayload;
   /** Matière réservée aux tests d'administration (masquage, relecture). */
   adminContent: ImportPayload;
+  /** Matière des tests de vente : questions de démonstration et cours en PDF. */
+  salesContent: ImportPayload;
+  demoQuestionIds: string[];
+  /** Chapitre de la matière de vente qui a un cours en PDF (3 pages, 2 en aperçu). */
+  courseChapterSlug: string;
   createdSubjects: string[];
+  /** Ce que la préparation a modifié en base, rétabli à la fin. */
+  restore: {
+    legalPages: { slug: string; body: string }[];
+    examSessionIds: string[];
+    plans: { id: "beta" | "pass_mensuel" | "pass_partiels" | "pass_annee"; on_sale: boolean }[];
+    storagePaths: string[];
+  };
 };
 
 export function run(): RunData {
@@ -27,14 +39,16 @@ export function uniqueEmail(label: string): string {
   return `e2e-${run().runId}-${label}-${Math.random().toString(36).slice(2, 8)}@example.com`.toLowerCase();
 }
 
+/** Inscription avec le code d'invitation de la bêta (accès complet), ou sans code (code = ""). */
 export async function signUp(page: Page, email: string, code = run().betaCode): Promise<void> {
   await page.goto("/inscription");
-  await page.getByLabel("Code bêta").fill(code);
+  if (code) await page.getByLabel("Code d’invitation (facultatif)").fill(code);
   await page.getByLabel("Pseudo (facultatif)").fill("Testeur");
   await page.getByLabel("Adresse e-mail").fill(email);
   await page.getByLabel("Mot de passe", { exact: true }).fill(PASSWORD);
+  await page.getByLabel(/J’accepte les conditions générales/).check();
   await page.getByRole("button", { name: "Créer mon compte" }).click();
-  await expect(page).toHaveURL(/\/cours$/);
+  await expect(page).toHaveURL(code ? /\/cours$/ : /\/acces$/);
 }
 
 export async function logIn(page: Page, email: string, password = PASSWORD): Promise<void> {

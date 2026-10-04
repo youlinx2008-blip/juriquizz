@@ -6,7 +6,7 @@ import { signUpAction, type AuthFormState } from "@/app/actions/auth";
 import { EmailSent } from "@/components/forms/email-sent";
 import { FieldError, invalidProps } from "@/components/forms/field-error";
 
-export function SignupForm({ initialCode }: { initialCode: string }) {
+export function SignupForm({ initialCode, next }: { initialCode: string; next: string }) {
   const [state, action, pending] = useActionState<AuthFormState, FormData>(signUpAction, { status: "idle" });
   const [method, setMethod] = useState<"password" | "link">("password");
 
@@ -15,27 +15,12 @@ export function SignupForm({ initialCode }: { initialCode: string }) {
   const fields = state.status === "error" ? (state.fields ?? {}) : {};
   return (
     <form className="form" action={action} noValidate>
+      {next && <input type="hidden" name="next" value={next} />}
       {state.status === "error" && (
         <p className="notice bad" role="alert">
           {state.message}
         </p>
       )}
-      <div className="field">
-        <label htmlFor="betaCode">Code bêta</label>
-        <input
-          id="betaCode"
-          name="betaCode"
-          type="text"
-          className="code-input"
-          autoComplete="off"
-          autoCapitalize="characters"
-          spellCheck={false}
-          defaultValue={initialCode}
-          required
-          {...invalidProps("betaCode-error", fields.betaCode)}
-        />
-        <FieldError id="betaCode-error" message={fields.betaCode} />
-      </div>
       <div className="field">
         <label htmlFor="displayName">Pseudo (facultatif)</label>
         <input id="displayName" name="displayName" type="text" autoComplete="nickname" maxLength={60} />
@@ -94,9 +79,48 @@ export function SignupForm({ initialCode }: { initialCode: string }) {
           <FieldError id="password-error" message={fields.password} />
         </div>
       )}
+      <div className="field">
+        <label htmlFor="betaCode">Code d&rsquo;invitation (facultatif)</label>
+        <input
+          id="betaCode"
+          name="betaCode"
+          type="text"
+          className="code-input"
+          autoComplete="off"
+          autoCapitalize="characters"
+          spellCheck={false}
+          defaultValue={initialCode}
+          aria-describedby={fields.betaCode ? "betaCode-error betaCode-help" : "betaCode-help"}
+          aria-invalid={fields.betaCode ? true : undefined}
+        />
+        <p className="help" id="betaCode-help">
+          Pour les testeurs de la bêta : accès gratuit jusqu&rsquo;à la fin de la bêta.
+        </p>
+        <FieldError id="betaCode-error" message={fields.betaCode} />
+      </div>
+      <div className="consents">
+        <div>
+          <label>
+            <input
+              type="checkbox"
+              name="acceptTerms"
+              required
+              {...invalidProps("acceptTerms-error", fields.acceptTerms)}
+            />
+            <span>
+              J&rsquo;accepte les{" "}
+              <Link href="/cgu" target="_blank" rel="noopener">
+                conditions générales d&rsquo;utilisation
+              </Link>
+              .
+            </span>
+          </label>
+          <FieldError id="acceptTerms-error" message={fields.acceptTerms} />
+        </div>
+      </div>
       <p className="help" style={{ margin: 0 }}>
         Sont conservés : ton e-mail, ton pseudo, tes réglages et ta progression. Tu peux tout supprimer à tout
-        moment. <Link href="/a-propos#donnees">En savoir plus</Link>
+        moment. <Link href="/confidentialite">Politique de confidentialité</Link>
       </p>
       <div className="actions">
         <button className="btn primary" type="submit" disabled={pending}>

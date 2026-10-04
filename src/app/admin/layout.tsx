@@ -17,6 +17,10 @@ export default async function AdminLayout({ children }: LayoutProps<"/admin">) {
       >
         <NavLink href="/admin/questions">Questions</NavLink>
         <NavLink href="/admin/matieres">Matières</NavLink>
+        <NavLink href="/admin/cours">Cours PDF</NavLink>
+        <NavLink href="/admin/vente">Vente</NavLink>
+        <NavLink href="/admin/achats">Achats</NavLink>
+        <NavLink href="/admin/textes">Textes légaux</NavLink>
         <NavLink href="/admin/codes">Codes bêta</NavLink>
         <NavLink href="/admin/retours">Retours</NavLink>
       </nav>

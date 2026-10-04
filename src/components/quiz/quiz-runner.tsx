@@ -46,13 +46,23 @@ type Props = {
   questions: QuizQuestion[];
   /** Questions de départ pour « Refaire mes erreurs » (sinon tout le niveau). */
   startIds: string[] | null;
+  /** Mini-quiz de démonstration (comptes sans pass) : rien n'est enregistré. */
+  demo?: boolean;
 };
 
 function prefersReducedMotion(): boolean {
   return !!window.matchMedia?.("(prefers-reduced-motion: reduce)").matches;
 }
 
-export function QuizRunner({ userId, chapter, chapterHref, level, questions, startIds }: Props) {
+export function QuizRunner({
+  userId,
+  chapter,
+  chapterHref,
+  level,
+  questions,
+  startIds,
+  demo = false,
+}: Props) {
   const [state, dispatch] = useReducer(quizReducer, null, (): QuizState => {
     if (!startIds) return startQuiz(questions);
     const wanted = new Set(startIds);
@@ -106,6 +116,7 @@ export function QuizRunner({ userId, chapter, chapterHref, level, questions, sta
         level={level}
         onRestart={(list, retry) => dispatch({ type: "restart", questions: list, retry })}
         allQuestions={questions}
+        demo={demo}
       />
     );
   }
@@ -121,6 +132,7 @@ export function QuizRunner({ userId, chapter, chapterHref, level, questions, sta
       level={level}
       onAnswer={answer}
       onNext={() => dispatch({ type: "next" })}
+      demo={demo}
     />
   );
 }
@@ -134,6 +146,7 @@ function QuestionCard({
   level,
   onAnswer,
   onNext,
+  demo,
 }: {
   state: QuizState;
   question: QuizQuestion;
@@ -143,6 +156,7 @@ function QuestionCard({
   level: LevelId;
   onAnswer: (optionId: string) => void;
   onNext: () => void;
+  demo: boolean;
 }) {
   const [hintOpen, setHintOpen] = useState(false);
   const titleRef = useRef<HTMLHeadingElement>(null);
@@ -181,7 +195,7 @@ function QuestionCard({
           Quitter
         </Link>
         <span className="lvl">
-          {chapter.label}, {levelInfo(level).label}
+          {demo ? "Démonstration" : `${chapter.label}, ${levelInfo(level).label}`}
           {state.retry ? " (erreurs)" : ""}
         </span>
         <span className="count">
@@ -285,7 +299,7 @@ function QuestionCard({
   );
 }
 
-type SaveState = "saving" | "saved" | "queued" | "rejected";
+type SaveState = "saving" | "saved" | "queued" | "rejected" | "demo";
 
 function Results({
   state,
@@ -295,6 +309,7 @@ function Results({
   level,
   onRestart,
   allQuestions,
+  demo,
 }: {
   state: QuizState;
   userId: string;
@@ -303,12 +318,13 @@ function Results({
   level: LevelId;
   onRestart: (questions: QuizQuestion[], retry: boolean) => void;
   allQuestions: QuizQuestion[];
+  demo: boolean;
 }) {
   const { fx } = useSound();
   const { score, total } = scoreOf(state);
   const wrong = wrongQuestions(state);
   const passed = hasPassed(score, total);
-  const [save, setSave] = useState<SaveState>("saving");
+  const [save, setSave] = useState<SaveState>(demo ? "demo" : "saving");
   const titleRef = useRef<HTMLHeadingElement>(null);
   const submitted = useRef(false);
 
@@ -320,7 +336,7 @@ function Results({
 
   // Enregistrement de la partie (une seule fois) ; hors connexion, elle part plus tard.
   useEffect(() => {
-    if (submitted.current) return;
+    if (submitted.current || demo) return;
     submitted.current = true;
     const input: AttemptInput = {
       chapterId: chapter.id,
@@ -343,7 +359,7 @@ function Results({
         queuePending(userId, input);
         setSave("queued");
       });
-  }, [chapter.id, level, state, userId]);
+  }, [chapter.id, demo, level, state, userId]);
 
   const message = passed
     ? "Niveau réussi : au moins 70 % de bonnes réponses."
@@ -352,7 +368,9 @@ function Results({
   return (
     <section className="paper pad" aria-labelledby="resultats-titre">
       <p className="course">
-        {chapter.label}, {chapter.title}, {levelInfo(level).label}
+        {demo
+          ? "Mini-quiz de démonstration"
+          : `${chapter.label}, ${chapter.title}, ${levelInfo(level).label}`}
         {state.retry ? " (erreurs)" : ""}
       </p>
       <h2 id="resultats-titre" className="visually-hidden" tabIndex={-1} ref={titleRef}>
@@ -368,6 +386,8 @@ function Results({
         {save === "saved" && "Score enregistré dans ta progression."}
         {save === "queued" && "Pas de connexion : le score sera enregistré dès le retour du réseau."}
         {save === "rejected" && "Ce score n’a pas pu être enregistré (des questions ont changé entre-temps)."}
+        {save === "demo" &&
+          "Démonstration : le score n’est pas enregistré. Avec un pass, ta progression est suivie chapitre par chapitre."}
       </p>
       <div className="actions">
         {wrong.length > 0 && (
@@ -380,14 +400,22 @@ function Results({
           type="button"
           onClick={() => onRestart(allQuestions, false)}
         >
-          Rejouer ce niveau
+          {demo ? "Rejouer la démonstration" : "Rejouer ce niveau"}
         </button>
-        <Link className="btn" href={chapterHref}>
-          Choisir un autre niveau
-        </Link>
-        <Link className="btn" href="/cours">
-          Tous les chapitres
-        </Link>
+        {demo ? (
+          <Link className="btn" href="/tarifs">
+            Voir les pass
+          </Link>
+        ) : (
+          <>
+            <Link className="btn" href={chapterHref}>
+              Choisir un autre niveau
+            </Link>
+            <Link className="btn" href="/cours">
+              Tous les chapitres
+            </Link>
+          </>
+        )}
       </div>
       <div className="review">
         <h3 className="levels-title" style={{ paddingLeft: 0, borderTop: 0 }}>

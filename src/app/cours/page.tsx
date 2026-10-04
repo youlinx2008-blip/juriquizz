@@ -3,6 +3,7 @@ import Link from "next/link";
 import { SceneSetter } from "@/components/scene-setter";
 import { requireAccess } from "@/lib/auth";
 import { countByChapterLevel, getMyAttempts, getSubjects, getVisibleQuestionRefs } from "@/lib/data/catalog";
+import { getDocuments } from "@/lib/data/documents";
 import { HOME_DECOR } from "@/lib/decors/registry";
 import { LEVELS } from "@/lib/levels";
 import { summarizeAttempts } from "@/lib/quiz/progress";
@@ -20,6 +21,10 @@ export default async function CatalogPage() {
   ]);
   const counts = countByChapterLevel(refs);
   const progress = summarizeAttempts(attempts);
+  const documents = await getDocuments(
+    supabase,
+    subjects.flatMap((subject) => subject.chapters.map((chapter) => chapter.id)),
+  );
 
   return (
     <>
@@ -76,6 +81,7 @@ export default async function CatalogPage() {
                   <p>{chapter.summary}</p>
                   <div className="meta">
                     <span>{total ? `3 niveaux, ${total} questions` : "En préparation"}</span>
+                    {documents.has(chapter.id) && <span>Cours en PDF</span>}
                     {total > 0 && (
                       <span>
                         {tried
@@ -85,7 +91,7 @@ export default async function CatalogPage() {
                     )}
                   </div>
                 </div>
-                {total > 0 && (
+                {(total > 0 || documents.has(chapter.id)) && (
                   <Link className="btn primary" href={`/cours/${subject.slug}/${chapter.slug}`}>
                     Ouvrir<span className="visually-hidden"> : {chapter.title}</span>
                   </Link>

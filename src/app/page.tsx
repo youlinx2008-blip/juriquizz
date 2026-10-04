@@ -3,6 +3,7 @@ import { Emblem } from "@/components/emblem";
 import { SceneSetter } from "@/components/scene-setter";
 import { getViewer } from "@/lib/auth";
 import { getSubjects } from "@/lib/data/catalog";
+import { getDocuments } from "@/lib/data/documents";
 import { HOME_DECOR } from "@/lib/decors/registry";
 import { LEVELS } from "@/lib/levels";
 import { createClient } from "@/lib/supabase/server";
@@ -10,8 +11,13 @@ import { createClient } from "@/lib/supabase/server";
 export default async function HomePage({ searchParams }: PageProps<"/">) {
   const { compte } = await searchParams;
   const viewer = await getViewer();
-  const subjects = await getSubjects(await createClient());
+  const supabase = await createClient();
+  const subjects = await getSubjects(supabase);
   const published = subjects.filter((subject) => subject.visible);
+  const documents = await getDocuments(
+    supabase,
+    published.flatMap((subject) => subject.chapters.map((chapter) => chapter.id)),
+  );
 
   return (
     <>
@@ -39,13 +45,21 @@ export default async function HomePage({ searchParams }: PageProps<"/">) {
                 Continuer mes révisions
               </Link>
             ) : viewer ? (
-              <Link className="btn primary" href="/activer">
-                Activer mon accès
-              </Link>
+              <>
+                <Link className="btn primary" href="/demo">
+                  Essayer le mini-quiz
+                </Link>
+                <Link className="btn" href="/tarifs">
+                  Voir les pass
+                </Link>
+              </>
             ) : (
               <>
                 <Link className="btn primary" href="/inscription">
-                  Créer un compte
+                  Créer un compte gratuit
+                </Link>
+                <Link className="btn" href="/tarifs">
+                  Voir les tarifs
                 </Link>
                 <Link className="btn" href="/connexion">
                   Se connecter
@@ -56,18 +70,25 @@ export default async function HomePage({ searchParams }: PageProps<"/">) {
         </div>
       </section>
 
-      <section className="paper" aria-labelledby="beta-titre">
-        <div className="pad">
-          <h2 id="beta-titre" style={{ margin: "0 0 6px", fontSize: "1.1rem" }}>
-            Bêta gratuite, sur invitation
-          </h2>
-          <p style={{ margin: 0 }}>
-            Pendant la bêta, l&rsquo;accès est gratuit pour les étudiants qui ont reçu un code
-            d&rsquo;invitation. Les questions sont en cours de relecture : celles qui n&rsquo;ont pas encore
-            été relues portent la mention « en cours de relecture ». Une erreur ? Signale-la depuis la
-            question concernée.
-          </p>
-        </div>
+      <section className="paper soon" aria-labelledby="formules-titre">
+        <h2 id="formules-titre">Comment ça marche</h2>
+        <ul>
+          <li>
+            <strong>Compte gratuit</strong> : un mini-quiz de démonstration et l&rsquo;aperçu de chaque cours
+            (couverture, sommaire).
+          </li>
+          <li>
+            <strong>Pass</strong> : tous les quiz et tous les cours en PDF, jusqu&rsquo;à une date de fin
+            connue avant l&rsquo;achat ; paiement unique, sans abonnement.{" "}
+            <Link href="/tarifs">Voir les tarifs</Link>
+          </li>
+          <li>
+            <strong>Bêta</strong> : les testeurs invités ont un accès gratuit jusqu&rsquo;à la fin de la bêta
+            ; les questions qui n&rsquo;ont pas encore été relues portent la mention « en cours de relecture
+            ».
+          </li>
+        </ul>
+        <p>Une erreur dans une question ? Signale-la depuis la question concernée.</p>
       </section>
 
       {published.map((subject) => (
@@ -81,17 +102,25 @@ export default async function HomePage({ searchParams }: PageProps<"/">) {
               {subject.title}
             </h2>
           </div>
-          {subject.chapters.map((chapter) => (
-            <div className="row" key={chapter.id} style={{ gridTemplateColumns: "auto 1fr" }}>
-              <span className="num" aria-hidden="true">
-                {chapter.number}
-              </span>
-              <div>
-                <h3>{chapter.title}</h3>
-                <p>{chapter.summary}</p>
+          {subject.chapters.map((chapter) => {
+            const document = documents.get(chapter.id);
+            return (
+              <div className="row" key={chapter.id}>
+                <span className="num" aria-hidden="true">
+                  {chapter.number}
+                </span>
+                <div>
+                  <h3>{chapter.title}</h3>
+                  <p>{chapter.summary}</p>
+                </div>
+                {document && document.previewPages > 0 && (
+                  <Link className="btn small" href={`/apercu/${subject.slug}/${chapter.slug}`}>
+                    Aperçu du cours<span className="visually-hidden"> : {chapter.title}</span>
+                  </Link>
+                )}
               </div>
-            </div>
-          ))}
+            );
+          })}
         </section>
       ))}
 

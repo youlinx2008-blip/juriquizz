@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import Link from "next/link";
 import { SceneSetter } from "@/components/scene-setter";
 
 export const metadata: Metadata = { title: "À propos" };
@@ -22,9 +23,10 @@ export default function AboutPage() {
 
         <h2>La relecture des questions</h2>
         <p>
-          Chaque question a un statut de relecture. Pendant la bêta, les questions qui n&rsquo;ont pas encore
-          été relues restent visibles, avec la mention « en cours de relecture ». Une question jugée
-          incorrecte est retirée jusqu&rsquo;à sa correction.
+          Chaque question a un statut de relecture. Les détenteurs d&rsquo;un pass ne voient que les questions
+          relues. Pendant la bêta, les testeurs voient aussi celles qui n&rsquo;ont pas encore été relues,
+          avec la mention « en cours de relecture ». Une question jugée incorrecte est retirée jusqu&rsquo;à
+          sa correction.
         </p>
 
         <h2>Signaler un problème</h2>
@@ -45,14 +47,25 @@ export default function AboutPage() {
         <ul>
           <li>
             Ce qui est conservé : ton adresse e-mail, ton pseudo, tes réglages, tes scores et tes réponses aux
-            quiz, et les retours que tu envoies.
+            quiz, les retours que tu envoies, les appareils connectés à ton compte et, si tu lis les cours en
+            PDF, ton nom (imprimé en filigrane) et la date de tes lectures. Avec un pass : tes achats.
           </li>
           <li>
-            À quoi ça sert : faire fonctionner ton compte, garder ta progression, améliorer les questions.
+            À quoi ça sert : faire fonctionner ton compte, garder ta progression, améliorer les questions,
+            protéger les cours contre la diffusion.
           </li>
-          <li>Aucune publicité, aucun cookie de suivi : seul le cookie de connexion est utilisé.</li>
-          <li>Tu peux supprimer ton compte et toutes ces données à tout moment, depuis la page Compte.</li>
+          <li>
+            Aucune publicité, aucun cookie de suivi : seuls les cookies de connexion et d&rsquo;appareil sont
+            utilisés.
+          </li>
+          <li>
+            Tu peux supprimer ton compte et ces données à tout moment, depuis la page Compte (les achats
+            restent enregistrés dix ans, sans lien avec le compte : obligation comptable).
+          </li>
         </ul>
+        <p>
+          Le détail est dans la <Link href="/confidentialite">politique de confidentialité</Link>.
+        </p>
       </article>
     </>
   );

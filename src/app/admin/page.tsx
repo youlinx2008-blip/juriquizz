@@ -1,10 +1,17 @@
 import Link from "next/link";
 import { SceneSetter } from "@/components/scene-setter";
+import { formatEuros } from "@/lib/money";
+import { getSalesStatus } from "@/lib/sales";
 import { createClient } from "@/lib/supabase/server";
 
 type Overview = {
   users: number;
   active_testers: number;
+  active_passes: number;
+  sales_count: number;
+  sales_cents: number;
+  demo_questions: number;
+  legal_ready: boolean;
   attempts: number;
   attempts_7d: number;
   feedback_open: number;
@@ -17,6 +24,7 @@ export default async function AdminHome() {
   if (error) throw new Error(error.message);
   const overview = data as unknown as Overview;
   const questions = overview.questions ?? {};
+  const sales = await getSalesStatus(supabase);
   return (
     <>
       <SceneSetter decor="chateau" />
@@ -31,6 +39,28 @@ export default async function AdminHome() {
           <div className="stat">
             <b>{overview.active_testers}</b>
             <span>testeurs bêta actifs</span>
+          </div>
+          <div className="stat">
+            <b>{overview.active_passes}</b>
+            <span>pass en cours</span>
+          </div>
+          <div className="stat">
+            <b>{formatEuros(overview.sales_cents)}</b>
+            <span>
+              <Link href="/admin/achats">{overview.sales_count} achat(s) payé(s)</Link>
+            </span>
+          </div>
+          <div className="stat">
+            <b>{sales.open ? "Ouverte" : "Fermée"}</b>
+            <span>
+              <Link href="/admin/vente">vente</Link>
+            </span>
+          </div>
+          <div className="stat">
+            <b>{overview.demo_questions}</b>
+            <span>
+              <Link href="/admin/questions?demo=1">questions de démonstration</Link>
+            </span>
           </div>
           <div className="stat">
             <b>{overview.attempts}</b>

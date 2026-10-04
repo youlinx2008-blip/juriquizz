@@ -4,6 +4,7 @@ import { useActionState } from "react";
 import {
   deleteAccountAction,
   updateDisplayNameAction,
+  updateFullNameAction,
   updatePasswordAction,
   type AccountFormState,
 } from "@/app/actions/account";
@@ -17,6 +18,40 @@ function Status({ state }: { state: AccountFormState }) {
     >
       {state.message}
     </p>
+  );
+}
+
+/** Nom et prénom imprimés en filigrane des cours ; `next` : page du cours à ouvrir ensuite. */
+export function FullNameForm({ initial, next }: { initial: string; next?: string }) {
+  const [state, action, pending] = useActionState<AccountFormState, FormData>(updateFullNameAction, {
+    status: "idle",
+  });
+  return (
+    <form className="form" action={action}>
+      {next && <input type="hidden" name="next" value={next} />}
+      <div className="field">
+        <label htmlFor="fullName">Prénom et nom</label>
+        <input
+          id="fullName"
+          name="fullName"
+          type="text"
+          minLength={2}
+          maxLength={120}
+          defaultValue={initial}
+          autoComplete="name"
+          required
+        />
+        <p className="help">
+          Imprimés avec ton adresse e-mail sur chaque page des cours en PDF que tu ouvres.
+        </p>
+      </div>
+      <Status state={state} />
+      <div>
+        <button className="btn primary" type="submit" disabled={pending}>
+          {next ? "Enregistrer et ouvrir le cours" : "Enregistrer le nom"}
+        </button>
+      </div>
+    </form>
   );
 }
 
@@ -93,7 +128,9 @@ export function DeleteAccountForm() {
   return (
     <form className="form" action={action}>
       <p style={{ margin: 0 }}>
-        La suppression efface ton compte, tes scores, tes réponses et tes retours. Elle est définitive.
+        La suppression efface ton compte, tes scores, tes réponses et tes retours. Elle est définitive : un
+        pass en cours prend fin avec le compte, sans remboursement. Les achats restent enregistrés dix ans,
+        sans lien avec ton compte (obligation comptable).
       </p>
       <div className="field">
         <label htmlFor="delete-confirm">Pour confirmer, écris SUPPRIMER</label>

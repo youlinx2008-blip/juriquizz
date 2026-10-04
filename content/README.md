@@ -57,3 +57,11 @@ d'explication ; décors parmi `ruines`, `frontiere`, `codex`, `eglise`, `plaine`
 sont affichées **dans l'ordre du fichier**, jamais mélangées (les explications citent les lettres).
 
 Un chapitre sans question apparaît « En préparation ».
+
+## Cours en PDF et démonstration
+
+Les cours en PDF ne passent pas par ce dossier : ils se déposent tels quels dans l'administration
+(`/admin/cours`, un fichier par chapitre), qui les range dans un stockage privé. Les questions du mini-quiz de
+démonstration se choisissent dans `/admin/questions` (bouton « Démo ») ; seules les questions relues y figurent.
+Une réimportation garde ce choix ; une question modifiée repasse toutefois « à relire » et quitte la démonstration
+jusqu'à sa relecture.

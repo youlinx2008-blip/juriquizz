@@ -4,7 +4,7 @@ import type { Database } from "../../src/lib/supabase/database.types";
 
 /**
  * Client « service » pour les scripts lancés par l'auteur sur sa machine.
- * La clé secrète contourne la RLS : elle ne doit jamais être exposée à l'application web.
+ * La clé secrète contourne la RLS : elle ne doit jamais être exposée au navigateur.
  */
 export function createServiceClient(): SupabaseClient<Database> {
   loadEnvConfig(process.cwd(), false, { info: () => {}, error: console.error });

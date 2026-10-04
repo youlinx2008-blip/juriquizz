@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import Link from "next/link";
+import { setQuestionDemoAction } from "@/app/actions/admin-vente";
 import { REVIEW_LABELS, ReviewStatusForm } from "@/components/admin/review-status-form";
 import { SceneSetter } from "@/components/scene-setter";
 import { getSubjects } from "@/lib/data/catalog";
@@ -19,6 +20,7 @@ export default async function AdminQuestionsPage({ searchParams }: PageProps<"/a
   const chapterFilter = str(params.chapitre);
   const levelFilter = str(params.niveau);
   const statusFilter = str(params.statut);
+  const demoFilter = str(params.demo);
   const sort = str(params.tri) || "cours";
 
   const supabase = await createClient();
@@ -33,6 +35,10 @@ export default async function AdminQuestionsPage({ searchParams }: PageProps<"/a
   if (chapterFilter) rows = rows.filter((row) => row.chapter_id === chapterFilter);
   if (levelFilter) rows = rows.filter((row) => row.level === levelFilter);
   if (statusFilter) rows = rows.filter((row) => row.review_status === statusFilter);
+  if (demoFilter === "1") rows = rows.filter((row) => row.demo);
+  const demoCount = (data ?? []).filter(
+    (row) => row.demo && !row.retired && row.review_status === "relue",
+  ).length;
   if (sort === "reussite") {
     rows = [...rows].sort(
       (a, b) =>
@@ -102,6 +108,13 @@ export default async function AdminQuestionsPage({ searchParams }: PageProps<"/a
             </select>
           </div>
           <div className="field">
+            <label htmlFor="demo">Démonstration</label>
+            <select id="demo" name="demo" defaultValue={demoFilter}>
+              <option value="">Toutes les questions</option>
+              <option value="1">Questions de la démo</option>
+            </select>
+          </div>
+          <div className="field">
             <label htmlFor="tri">Tri</label>
             <select id="tri" name="tri" defaultValue={sort}>
               <option value="cours">Ordre du cours</option>
@@ -113,7 +126,10 @@ export default async function AdminQuestionsPage({ searchParams }: PageProps<"/a
             Filtrer
           </button>
         </form>
-        <p style={{ color: "var(--ink2)", fontSize: "0.9rem" }}>{rows.length} question(s)</p>
+        <p style={{ color: "var(--ink2)", fontSize: "0.9rem" }}>
+          {rows.length} question(s). Mini-quiz de démonstration : {demoCount} question(s) relue(s) ; seules
+          les questions relues y figurent, et elles sont visibles de tout compte, même sans pass.
+        </p>
         <div className="table-wrap">
           <table className="data">
             <thead>
@@ -124,6 +140,7 @@ export default async function AdminQuestionsPage({ searchParams }: PageProps<"/a
                 <th scope="col">Réussite</th>
                 <th scope="col">Retours</th>
                 <th scope="col">Statut</th>
+                <th scope="col">Démo</th>
               </tr>
             </thead>
             <tbody>
@@ -166,6 +183,24 @@ export default async function AdminQuestionsPage({ searchParams }: PageProps<"/a
                       <div style={{ marginTop: 6 }}>
                         <ReviewStatusForm questionId={row.question_id} status={row.review_status} />
                       </div>
+                    </td>
+                    <td>
+                      <form action={setQuestionDemoAction}>
+                        <input type="hidden" name="questionId" value={row.question_id} />
+                        <input type="hidden" name="demo" value={row.demo ? "false" : "true"} />
+                        <button
+                          className={row.demo ? "btn small primary" : "btn small"}
+                          type="submit"
+                          aria-pressed={row.demo}
+                        >
+                          Démo<span className="visually-hidden"> : {row.question_id}</span>
+                        </button>
+                      </form>
+                      {row.demo && row.review_status !== "relue" && (
+                        <div className="rate-low" style={{ marginTop: 4 }}>
+                          pas encore relue
+                        </div>
+                      )}
                     </td>
                   </tr>
                 );

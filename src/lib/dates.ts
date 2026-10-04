@@ -44,3 +44,22 @@ export function formatDayTime(iso: string): string {
 export function isPast(iso: string | null): boolean {
   return iso !== null && Date.parse(iso) <= Date.now();
 }
+
+/** Instant situé `days` jours avant maintenant. */
+export function daysAgo(days: number): string {
+  return new Date(Date.now() - days * 86_400_000).toISOString();
+}
+
+/** Année universitaire en cours, « 2026-2027 » (elle commence en septembre). */
+export function currentAcademicYear(at = new Date()): string {
+  const year = Number(at.toLocaleDateString("en-CA", { timeZone: "Europe/Paris", year: "numeric" }));
+  const month = Number(at.toLocaleDateString("en-CA", { timeZone: "Europe/Paris", month: "numeric" }));
+  const start = month >= 9 ? year : year - 1;
+  return `${start}-${start + 1}`;
+}
+
+/** Instant ISO vers « 2027-01-31 » (jour à Paris), pour préremplir un champ date. */
+export function parisDateInput(iso: string | null): string {
+  if (!iso) return "";
+  return new Date(iso).toLocaleDateString("en-CA", { timeZone: "Europe/Paris" });
+}

@@ -9,9 +9,18 @@ export type Viewer = {
   email: string | null;
   displayName: string;
   isAdmin: boolean;
-  /** Accès au contenu (testeur bêta ou administration). */
+  /** Accès au contenu (pass, testeur bêta ou administration). */
   hasAccess: boolean;
   hasBeta: boolean;
+  /** Fin de l'accès en cours (null : pas d'accès, ou accès sans date de fin). */
+  accessEndsAt: string | null;
+  /** Fin du dernier accès terminé (pass expiré). */
+  lastEndedAt: string | null;
+  /** Version des CGU en vigueur et version acceptée par l'utilisateur. */
+  cguVersion: number | null;
+  termsVersion: number | null;
+  /** Nom et prénom pour le filigrane des cours en PDF. */
+  fullName: string | null;
   profilePrefs: Partial<Prefs>;
 };
 
@@ -19,12 +28,17 @@ type ViewerContext = {
   is_admin: boolean;
   has_access: boolean;
   has_beta: boolean;
+  access_ends_at: string | null;
+  last_ended_at: string | null;
+  cgu_version: number | null;
   profile: {
     display_name: string;
     sound_pref: string | null;
     decor_pref: string | null;
     theme_pref: string | null;
     volume: number | null;
+    terms_version: number | null;
+    full_name: string | null;
   } | null;
 };
 
@@ -45,6 +59,11 @@ export const getViewer = cache(async (): Promise<Viewer | null> => {
     isAdmin: ctx.is_admin,
     hasAccess: ctx.has_access,
     hasBeta: ctx.has_beta,
+    accessEndsAt: ctx.has_access ? (ctx.access_ends_at ?? null) : null,
+    lastEndedAt: ctx.last_ended_at ?? null,
+    cguVersion: ctx.cgu_version ?? null,
+    termsVersion: ctx.profile?.terms_version ?? null,
+    fullName: ctx.profile?.full_name ?? null,
     profilePrefs: ctx.profile ? prefsFromProfile(ctx.profile) : {},
   };
 });
@@ -63,10 +82,10 @@ export async function requireViewer(next: string): Promise<Viewer> {
   return viewer;
 }
 
-/** Page réservée aux comptes qui ont un accès valide ; sinon, page d'activation. */
+/** Page réservée aux comptes qui ont un accès en cours (pass, bêta) ; sinon, page « Mon accès ». */
 export async function requireAccess(next: string): Promise<Viewer> {
   const viewer = await requireViewer(next);
-  if (!viewer.hasAccess) redirect(`/activer?suite=${encodeURIComponent(next)}`);
+  if (!viewer.hasAccess) redirect(`/acces?suite=${encodeURIComponent(next)}`);
   return viewer;
 }
 

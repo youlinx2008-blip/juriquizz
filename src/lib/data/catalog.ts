@@ -133,21 +133,20 @@ export function countByChapterLevel(refs: QuestionRef[]): Map<string, number> {
 }
 
 /** Questions d'un niveau, dans l'ordre du fichier, avec leurs corrections. */
-export async function getQuizQuestions(
-  supabase: ServerClient,
-  chapterId: string,
-  level: LevelId,
-): Promise<QuizQuestion[]> {
-  const result = rows(
-    await supabase
-      .from("questions")
-      .select("id, type, decor, prompt, options, correct_option, hint, explanation, review_status")
-      .eq("chapter_id", chapterId)
-      .eq("level", level)
-      .is("retired_at", null)
-      .order("position"),
-  );
-  return result.map((row) => ({
+const QUIZ_COLUMNS = "id, type, decor, prompt, options, correct_option, hint, explanation, review_status";
+
+function toQuizQuestion(row: {
+  id: string;
+  type: QuizQuestion["type"];
+  decor: string | null;
+  prompt: string;
+  options: unknown;
+  correct_option: string;
+  hint: string | null;
+  explanation: unknown;
+  review_status: QuizQuestion["reviewStatus"];
+}): QuizQuestion {
+  return {
     id: row.id,
     type: row.type,
     decor: isDecorKey(row.decor) ? row.decor : null,
@@ -157,7 +156,46 @@ export async function getQuizQuestions(
     hint: row.hint,
     explanation: row.explanation as string[],
     reviewStatus: row.review_status,
-  }));
+  };
+}
+
+export async function getQuizQuestions(
+  supabase: ServerClient,
+  chapterId: string,
+  level: LevelId,
+): Promise<QuizQuestion[]> {
+  const result = rows(
+    await supabase
+      .from("questions")
+      .select(QUIZ_COLUMNS)
+      .eq("chapter_id", chapterId)
+      .eq("level", level)
+      .is("retired_at", null)
+      .order("position"),
+  );
+  return result.map(toQuizQuestion);
+}
+
+/** Questions du mini-quiz de démonstration (relues, matière publiée : la RLS s'en assure). */
+export async function getDemoQuestions(supabase: ServerClient): Promise<QuizQuestion[]> {
+  const result = rows(
+    await supabase
+      .from("questions")
+      .select(`${QUIZ_COLUMNS}, level, position, chapters!inner(position)`)
+      .eq("demo", true)
+      .eq("review_status", "relue")
+      .is("retired_at", null),
+  );
+  // Ordre du cours : chapitre, niveau, puis position dans le niveau.
+  const levelRank = (level: string) => ["facile", "intermediaire", "confirme"].indexOf(level);
+  return result
+    .sort(
+      (a, b) =>
+        a.chapters.position - b.chapters.position ||
+        levelRank(a.level) - levelRank(b.level) ||
+        a.position - b.position,
+    )
+    .map(toQuizQuestion);
 }
 
 export async function getMyAttempts(supabase: ServerClient, chapterId?: string): Promise<AttemptRow[]> {

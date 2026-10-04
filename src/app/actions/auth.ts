@@ -1,11 +1,14 @@
 "use server";
 
+import { revalidatePath } from "next/cache";
+import { cookies } from "next/headers";
 import { redirect } from "next/navigation";
 import { z } from "zod";
 import { safeNext } from "@/lib/auth";
+import { DEVICE_CHECK_COOKIE, DEVICE_COOKIE, isDeviceId } from "@/lib/devices";
 import { authErrorMessage, BETA_CODE_MESSAGES } from "@/lib/auth-messages";
 import { siteUrl } from "@/lib/supabase/env";
-import { createClient } from "@/lib/supabase/server";
+import { createClient, type ServerClient } from "@/lib/supabase/server";
 
 export type AuthFormState =
   | { status: "idle" }
@@ -26,9 +29,10 @@ const signUpSchema = z
   .object({
     displayName: z.string().trim().max(60, "Pseudo : 60 caractères au plus.").default(""),
     email,
-    betaCode: z.string().trim().min(1, "Le code bêta est nécessaire pendant la bêta."),
+    betaCode: z.string().trim().max(40, "Code invalide.").default(""),
     method: z.enum(["password", "link"]),
     password: z.string().default(""),
+    acceptTerms: z.literal("on", { error: "Accepte les conditions d’utilisation pour créer ton compte." }),
   })
   .superRefine((value, ctx) => {
     if (value.method === "password") {
@@ -47,14 +51,18 @@ function firstIssues(error: z.ZodError): Record<string, string> {
   return fields;
 }
 
-/** Création de compte : le code bêta est vérifié d'abord, puis utilisé à la création du compte. */
+/**
+ * Création de compte. Sans code : compte gratuit (démonstration, aperçus, achat d'un pass). Avec un code
+ * d'invitation : il est vérifié d'abord, puis appliqué à la création du compte (accès bêta).
+ */
 export async function signUpAction(_prev: AuthFormState, formData: FormData): Promise<AuthFormState> {
   const parsed = signUpSchema.safeParse({
     displayName: formData.get("displayName") ?? "",
     email: formData.get("email"),
-    betaCode: formData.get("betaCode"),
+    betaCode: formData.get("betaCode") ?? "",
     method: formData.get("method"),
     password: formData.get("password") ?? "",
+    acceptTerms: formData.get("acceptTerms"),
   });
   if (!parsed.success) {
     return { status: "error", message: "Vérifie les champs indiqués.", fields: firstIssues(parsed.error) };
@@ -62,20 +70,28 @@ export async function signUpAction(_prev: AuthFormState, formData: FormData): Pr
   const input = parsed.data;
   const supabase = await createClient();
 
-  const { data: codeStatus, error: codeError } = await supabase.rpc("check_beta_code", {
-    p_code: input.betaCode,
-  });
-  if (codeError) return { status: "error", message: authErrorMessage(null) };
-  if (codeStatus !== "ok") {
-    return {
-      status: "error",
-      message: "Code bêta refusé.",
-      fields: { betaCode: BETA_CODE_MESSAGES[codeStatus] ?? BETA_CODE_MESSAGES.invalide },
-    };
+  if (input.betaCode) {
+    const { data: codeStatus, error: codeError } = await supabase.rpc("check_beta_code", {
+      p_code: input.betaCode,
+    });
+    if (codeError) return { status: "error", message: authErrorMessage(null) };
+    if (codeStatus !== "ok") {
+      return {
+        status: "error",
+        message: "Code d’invitation refusé.",
+        fields: { betaCode: BETA_CODE_MESSAGES[codeStatus] ?? BETA_CODE_MESSAGES.invalide },
+      };
+    }
   }
 
-  const metadata = { display_name: input.displayName, beta_code: input.betaCode };
-  const next = "/cours";
+  // Version des CGU acceptées, retenue sur le profil.
+  const { data: cgu } = await supabase.from("legal_pages").select("version").eq("slug", "cgu").maybeSingle();
+  const metadata = {
+    display_name: input.displayName,
+    ...(input.betaCode ? { beta_code: input.betaCode } : {}),
+    ...(cgu ? { terms_version: String(cgu.version) } : {}),
+  };
+  const next = safeNext(formData.get("next"), input.betaCode ? "/cours" : "/acces");
 
   if (input.method === "password") {
     const { data, error } = await supabase.auth.signUp({
@@ -182,8 +198,29 @@ export async function redeemCodeAction(_prev: RedeemState, formData: FormData): 
   redirect(safeNext(formData.get("next")));
 }
 
+/** Déconnexion : l'appareil libère sa place (deux appareils au plus par compte). */
+async function forgetDevice(supabase: ServerClient): Promise<void> {
+  const store = await cookies();
+  const key = store.get(DEVICE_COOKIE)?.value;
+  if (isDeviceId(key)) {
+    const { data } = await supabase.from("device_sessions").select("id").eq("browser_key", key).maybeSingle();
+    if (data) await supabase.rpc("revoke_device", { p_device: data.id });
+  }
+  store.delete(DEVICE_CHECK_COOKIE);
+}
+
 export async function signOutAction(): Promise<void> {
   const supabase = await createClient();
+  await forgetDevice(supabase);
   await supabase.auth.signOut();
   redirect("/");
+}
+
+/** Acceptation de la nouvelle version des CGU (bandeau affiché après une mise à jour). */
+export async function acceptTermsAction(formData: FormData): Promise<void> {
+  const version = Number(formData.get("version"));
+  if (!Number.isInteger(version) || version < 1) return;
+  const supabase = await createClient();
+  await supabase.rpc("accept_terms", { p_version: version });
+  revalidatePath("/", "layout");
 }

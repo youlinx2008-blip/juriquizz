@@ -12,10 +12,11 @@ test.describe("comptes", () => {
   test("inscription par lien e-mail, sans mot de passe, avec le code reçu", async ({ page }) => {
     const email = uniqueEmail("lien");
     await page.goto("/inscription");
-    await page.getByLabel("Code bêta").fill(run().betaCode);
+    await page.getByLabel("Code d’invitation (facultatif)").fill(run().betaCode);
     await page.getByLabel("Adresse e-mail").fill(email);
     await page.getByLabel("Par lien e-mail, sans mot de passe").check();
     await expect(page.getByLabel("Mot de passe", { exact: true })).toHaveCount(0);
+    await page.getByLabel(/J’accepte les conditions générales/).check();
     await page.getByRole("button", { name: "Créer mon compte" }).click();
     await expect(page.getByText(/un e-mail vient de partir/)).toBeVisible();
 
@@ -45,13 +46,33 @@ test.describe("comptes", () => {
 
   test("un code bêta invalide est refusé avant la création du compte", async ({ page }) => {
     await page.goto("/inscription");
-    await page.getByLabel("Code bêta").fill("PAS-UN-CODE");
+    await page.getByLabel("Code d’invitation (facultatif)").fill("PAS-UN-CODE");
     await page.getByLabel("Adresse e-mail").fill(uniqueEmail("refus"));
     await page.getByLabel("Mot de passe", { exact: true }).fill(PASSWORD);
+    await page.getByLabel(/J’accepte les conditions générales/).check();
     await page.getByRole("button", { name: "Créer mon compte" }).click();
     await expect(page.getByText("Ce code bêta n'existe pas. Vérifie l'orthographe.")).toBeVisible();
-    await expect(page.getByLabel("Code bêta")).toHaveAttribute("aria-invalid", "true");
+    await expect(page.getByLabel("Code d’invitation (facultatif)")).toHaveAttribute("aria-invalid", "true");
     await expect(page).toHaveURL(/\/inscription$/);
+  });
+
+  test("l'acceptation des conditions d'utilisation est demandée à l'inscription", async ({ page }) => {
+    await page.goto("/inscription");
+    await page.getByLabel("Adresse e-mail").fill(uniqueEmail("cgu"));
+    await page.getByLabel("Mot de passe", { exact: true }).fill(PASSWORD);
+    await page.getByRole("button", { name: "Créer mon compte" }).click();
+    await expect(page.getByText("Accepte les conditions d’utilisation pour créer ton compte.")).toBeVisible();
+    await expect(page).toHaveURL(/\/inscription$/);
+  });
+
+  test("sans code : compte gratuit, avec la démonstration et les tarifs", async ({ page }) => {
+    await signUp(page, uniqueEmail("gratuit"), "");
+    await expect(page.getByRole("heading", { name: "Bienvenue sur JuriQuizz" })).toBeVisible();
+    const nav = page.getByRole("navigation", { name: "Navigation principale" });
+    await expect(nav.getByRole("link")).toHaveText(["Démo", "Tarifs", "Compte"]);
+    // Les cours restent fermés : retour à « Mon accès ».
+    await page.goto("/cours");
+    await expect(page).toHaveURL(/\/acces\?suite=%2Fcours$/);
   });
 
   test("les pages de cours demandent une connexion, puis ramènent à la page voulue", async ({ page }) => {

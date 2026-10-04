@@ -2,28 +2,33 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import { redirect } from "next/navigation";
 import { SceneSetter } from "@/components/scene-setter";
-import { getViewer } from "@/lib/auth";
+import { getViewer, safeNext } from "@/lib/auth";
 import { SignupForm } from "./signup-form";
 
 export const metadata: Metadata = { title: "Créer un compte" };
 
 export default async function SignupPage({ searchParams }: PageProps<"/inscription">) {
+  const { code, suite } = await searchParams;
+  const next = typeof suite === "string" ? safeNext(suite, "") : "";
   const viewer = await getViewer();
-  if (viewer) redirect(viewer.hasAccess ? "/cours" : "/activer");
-  const { code } = await searchParams;
+  if (viewer) redirect(next || (viewer.hasAccess ? "/cours" : "/acces"));
   return (
     <>
       <SceneSetter decor="codex" />
       <section className="paper pad">
-        <p className="course">Bêta gratuite, sur invitation</p>
+        <p className="course">Compte gratuit</p>
         <h1 className="title small">Créer un compte</h1>
         <p className="lead" style={{ marginBottom: 18 }}>
-          Pendant la bêta, il faut un code d&rsquo;invitation. Il t&rsquo;a été transmis avec le lien vers
-          JuriQuizz.
+          Un compte gratuit donne accès au mini-quiz de démonstration et à l&rsquo;aperçu des cours. Les pass
+          ouvrent tous les quiz et tous les cours en PDF. Tu as reçu un code d&rsquo;invitation pour la bêta ?
+          Saisis-le ici.
         </p>
-        <SignupForm initialCode={typeof code === "string" ? code : ""} />
+        <SignupForm initialCode={typeof code === "string" ? code : ""} next={next} />
         <p style={{ marginBottom: 0 }}>
-          Déjà un compte ? <Link href="/connexion">Se connecter</Link>
+          Déjà un compte ?{" "}
+          <Link href={next ? `/connexion?suite=${encodeURIComponent(next)}` : "/connexion"}>
+            Se connecter
+          </Link>
         </p>
       </section>
     </>
