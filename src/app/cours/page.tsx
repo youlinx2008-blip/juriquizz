@@ -2,7 +2,13 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import { SceneSetter } from "@/components/scene-setter";
 import { requireAccess } from "@/lib/auth";
-import { countByChapterLevel, getMyAttempts, getSubjects, getVisibleQuestionRefs } from "@/lib/data/catalog";
+import {
+  countByChapterLevel,
+  getMyAttempts,
+  getNewChapterIds,
+  getSubjects,
+  getVisibleQuestionRefs,
+} from "@/lib/data/catalog";
 import { getDocuments } from "@/lib/data/documents";
 import { HOME_DECOR } from "@/lib/decors/registry";
 import { LEVELS } from "@/lib/levels";
@@ -14,10 +20,11 @@ export const metadata: Metadata = { title: "Cours" };
 export default async function CatalogPage() {
   const viewer = await requireAccess("/cours");
   const supabase = await createClient();
-  const [subjects, refs, attempts] = await Promise.all([
+  const [subjects, refs, attempts, news] = await Promise.all([
     getSubjects(supabase),
     getVisibleQuestionRefs(supabase),
     getMyAttempts(supabase),
+    getNewChapterIds(supabase),
   ]);
   const counts = countByChapterLevel(refs);
   const progress = summarizeAttempts(attempts);
@@ -68,6 +75,8 @@ export default async function CatalogPage() {
               0,
             );
             const tried = LEVELS.filter((level) => progress.has(`${chapter.id}:${level.id}`)).length;
+            // Exclusivité Premium : son contenu n'est pas lisible sans le Pass Année Premium.
+            const locked = chapter.premium && !viewer.hasPremium;
             return (
               <div className="row" key={chapter.id}>
                 <span className="num" aria-hidden="true">
@@ -77,10 +86,16 @@ export default async function CatalogPage() {
                   <h3>
                     <span className="visually-hidden">{chapter.label} : </span>
                     {chapter.title}
+                    {news.has(chapter.id) && <span className="pill new title-pill">Nouveau</span>}
+                    {chapter.premium && <span className="pill premium title-pill">Premium</span>}
                   </h3>
                   <p>{chapter.summary}</p>
                   <div className="meta">
-                    <span>{total ? `3 niveaux, ${total} questions` : "En préparation"}</span>
+                    {locked ? (
+                      <span>Exclusivité du Pass Année Premium</span>
+                    ) : (
+                      <span>{total ? `3 niveaux, ${total} questions` : "En préparation"}</span>
+                    )}
                     {documents.has(chapter.id) && <span>Cours en PDF</span>}
                     {total > 0 && (
                       <span>
@@ -91,10 +106,16 @@ export default async function CatalogPage() {
                     )}
                   </div>
                 </div>
-                {(total > 0 || documents.has(chapter.id)) && (
-                  <Link className="btn primary" href={`/cours/${subject.slug}/${chapter.slug}`}>
-                    Ouvrir<span className="visually-hidden"> : {chapter.title}</span>
+                {locked ? (
+                  <Link className="btn" href={`/cours/${subject.slug}/${chapter.slug}`}>
+                    Découvrir<span className="visually-hidden"> : {chapter.title}</span>
                   </Link>
+                ) : (
+                  (total > 0 || documents.has(chapter.id)) && (
+                    <Link className="btn primary" href={`/cours/${subject.slug}/${chapter.slug}`}>
+                      Ouvrir<span className="visually-hidden"> : {chapter.title}</span>
+                    </Link>
+                  )
                 )}
               </div>
             );

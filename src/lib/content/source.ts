@@ -40,6 +40,8 @@ export const sourceChapterSchema = z.object({
   titre: nonEmpty,
   decor_par_defaut: decorKey,
   resume: z.string().trim().default(""),
+  /** Chapitre réservé au Pass Année Premium (seulement avant sa première publication). */
+  premium: z.boolean().optional(),
   niveaux: z.partialRecord(z.enum(LEVEL_IDS), z.array(sourceQuestionSchema)),
 });
 

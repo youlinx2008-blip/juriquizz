@@ -6,6 +6,7 @@ import { createClient } from "@/lib/supabase/server";
 const REFUSALS: Record<string, [number, string]> = {
   "28000": [401, "Connecte-toi pour lire ce cours."],
   "42501": [403, "Ce cours est réservé aux détenteurs d’un pass."],
+  JQ402: [403, "Ce cours fait partie des exclusivités du Pass Année Premium."],
   JQ428: [428, "Indique ton nom avant d’ouvrir les cours."],
   P0002: [404, "Cours introuvable."],
   "54000": [429, "Tu as ouvert beaucoup de cours aujourd’hui : réessaie demain."],

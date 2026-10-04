@@ -8,6 +8,10 @@ type Overview = {
   users: number;
   active_testers: number;
   active_passes: number;
+  active_premium: number;
+  referral_rewards: number;
+  exam_attempts_7d: number;
+  premium_exclusives: number;
   sales_count: number;
   sales_cents: number;
   demo_questions: number;
@@ -45,6 +49,13 @@ export default async function AdminHome() {
             <span>pass en cours</span>
           </div>
           <div className="stat">
+            <b>{overview.active_premium}</b>
+            <span>
+              Pass Premium en cours (
+              <Link href="/admin/vente">{overview.premium_exclusives} exclusivité(s)</Link>)
+            </span>
+          </div>
+          <div className="stat">
             <b>{formatEuros(overview.sales_cents)}</b>
             <span>
               <Link href="/admin/achats">{overview.sales_count} achat(s) payé(s)</Link>
@@ -65,6 +76,18 @@ export default async function AdminHome() {
           <div className="stat">
             <b>{overview.attempts}</b>
             <span>parties jouées ({overview.attempts_7d} sur 7 jours)</span>
+          </div>
+          <div className="stat">
+            <b>{overview.exam_attempts_7d}</b>
+            <span>
+              <Link href="/admin/examens">examens blancs</Link> commencés (7 jours)
+            </span>
+          </div>
+          <div className="stat">
+            <b>{overview.referral_rewards}</b>
+            <span>
+              <Link href="/admin/reglages">parrainages</Link> récompensés
+            </span>
           </div>
           <div className="stat">
             <b>{overview.feedback_open}</b>

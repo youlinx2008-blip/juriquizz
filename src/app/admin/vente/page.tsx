@@ -3,8 +3,9 @@ import Link from "next/link";
 import { deleteExamSessionAction } from "@/app/actions/admin-vente";
 import { BetaEndForm, ExamSessionForm, PlanForm } from "@/components/admin/sales-forms";
 import { SceneSetter } from "@/components/scene-setter";
-import { getOffers, offerTerm } from "@/lib/data/offers";
+import { getOffers, getPremiumExclusives, offerTerm } from "@/lib/data/offers";
 import { currentAcademicYear, formatDay, isPast, parisDateInput } from "@/lib/dates";
+import { mentions } from "@/lib/legal-clauses";
 import { isPassPlan } from "@/lib/plans";
 import { getSalesStatus } from "@/lib/sales";
 import { createClient } from "@/lib/supabase/server";
@@ -18,13 +19,16 @@ function euros(cents: number | null): string {
 
 export default async function AdminSalesPage() {
   const supabase = await createClient();
-  const [sales, offers, plansResult, sessionsResult, betaResult] = await Promise.all([
+  const [sales, offers, plansResult, sessionsResult, betaResult, exclusives, cgvResult] = await Promise.all([
     getSalesStatus(supabase),
     getOffers(supabase),
     supabase.from("plans").select("*").order("position"),
     supabase.from("exam_sessions").select("id, academic_year, label, ends_at").order("ends_at"),
     supabase.from("settings").select("beta_ends_at").maybeSingle(),
+    getPremiumExclusives(supabase),
+    supabase.from("legal_pages").select("body").eq("slug", "cgv").maybeSingle(),
   ]);
+  const cgv = cgvResult.data?.body ?? "";
   if (plansResult.error) throw new Error(plansResult.error.message);
   const plans = plansResult.data ?? [];
   const sessions = sessionsResult.data ?? [];
@@ -99,8 +103,39 @@ export default async function AdminSalesPage() {
                     ? `En vente. Pour un achat aujourd’hui : ${formatDay(offer.endsAt)}.`
                     : offer.endsAt === null
                       ? "Pas en vente : aucune date de partiels à venir."
-                      : "Pas en vente (case « En vente » décochée)."}
+                      : plan.on_sale && plan.id === "pass_annee_premium"
+                        ? `Pas en vente : il faut au moins deux exclusivités réellement disponibles (${exclusives.length} aujourd’hui).`
+                        : "Pas en vente (case « En vente » décochée)."}
                 </p>
+                {plan.id === "pass_annee_premium" && (
+                  <div className="fine">
+                    <p style={{ margin: 0 }}>
+                      Tout le Pass Année, plus les exclusivités : chapitres réservés avant leur publication
+                      (page <Link href="/admin/matieres">Matières</Link>) et examens blancs Premium (page{" "}
+                      <Link href="/admin/examens">Examens</Link>). Un acheteur du Pass Année en cours ne paie
+                      que la différence. Exclusivités réellement disponibles : {exclusives.length}
+                      {exclusives.length ? " :" : "."}
+                    </p>
+                    {exclusives.length > 0 && (
+                      <ul style={{ margin: "4px 0 0", paddingLeft: 20 }}>
+                        {exclusives.map((item) => (
+                          <li key={item.id}>
+                            {item.kind === "examen" ? "Examen blanc" : "Chapitre"} : {item.title} (
+                            {item.subjectTitle})
+                          </li>
+                        ))}
+                      </ul>
+                    )}
+                    {plan.on_sale && !mentions(cgv, "premium") && (
+                      <p className="notice warn" style={{ marginTop: 8 }}>
+                        Les CGV en vigueur ne mentionnent pas le Pass Année Premium : ajoute-le à
+                        l&rsquo;article sur les offres (contenu, durée, déduction du Pass Année en cours)
+                        depuis la page <Link href="/admin/textes">Textes légaux</Link> (clause proposée dans{" "}
+                        <Link href="/admin/reglages">Réglages</Link>).
+                      </p>
+                    )}
+                  </div>
+                )}
                 <PlanForm
                   plan={{
                     plan: plan.id,

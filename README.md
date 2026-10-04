@@ -10,7 +10,20 @@ stockage privé), Stripe Checkout (paiement unique), hébergement prévu sur Ver
 région Union européenne. Tests : Vitest (logique et base de données), Playwright (parcours sur ordinateur et
 mobile, en clair et en sombre, paiements compris grâce à un faux Stripe local).
 
-## État : phase 1, vente
+## État : phase 2, croissance
+
+| Demandé pour la phase 2                                                                                 | Où c'est                                                                    |
+| ------------------------------------------------------------------------------------------------------- | --------------------------------------------------------------------------- |
+| Déblocage des niveaux : le suivant s'ouvre à partir de 70 % de bonnes réponses au précédent             | page du chapitre, fonction SQL `level_unlocked` ; réglage `/admin/reglages` |
+| Examens blancs chronométrés : tirage au hasard, temps limité, correction à la fin, note sur 20          | `/examens`, `/admin/examens`                                                |
+| Pass Année Premium : tout le Pass Année, plus des exclusivités (chapitres, examens blancs)              | `/tarifs/premium` ; `/admin/matieres`, `/admin/examens`, `/admin/vente`     |
+| Premium en vente seulement avec deux exclusivités réellement disponibles ; rien de déjà vendu n'y passe | fonctions SQL `premium_exclusives`, `pass_offers`, déclencheurs             |
+| Parrainage : réduction pour le filleul sur son premier achat, jours offerts au parrain                  | `/parrainage`, `/inscription?parrain=…` ; réglages `/admin/reglages`        |
+| Nouveaux chapitres : ajoutés au fichier de la matière, signalés « Nouveau » trois semaines              | `/cours` ; voir `content/README.md`                                         |
+
+Le Premium est hors vente et le parrainage fermé tant que l'administration ne les ouvre pas ; le déblocage des
+niveaux est actif dès la mise à jour (désactivable). Tout ce qui était demandé pour les phases 0 et 1 reste en
+place :
 
 | Demandé pour la phase 1                                                                              | Où c'est                                                |
 | ---------------------------------------------------------------------------------------------------- | ------------------------------------------------------- |
@@ -23,10 +36,6 @@ mobile, en clair et en sombre, paiements compris grâce à un faux Stripe local)
 | Mini-quiz de démonstration pour les comptes sans pass                                                | `/demo` ; questions choisies dans `/admin/questions`    |
 | Un compte par personne, deux appareils connectés à la fois au plus                                   | `src/proxy.ts`, page « Compte »                         |
 | Statuts : visiteur, inscrit sans pass, testeur bêta (jusqu'à la fin de la bêta), détenteur d'un pass | `src/lib/auth.ts`, fonctions SQL `has_access`…          |
-
-Tout ce qui était demandé pour la phase 0 (comptes, codes bêta, import du contenu, quiz, progression, décors et
-son, administration, retours) reste en place. Phase 2, non commencée : Premium, parrainage, déblocage des
-niveaux à 70 %, examens blancs.
 
 **La vente reste fermée tant que tout n'est pas prêt** : clés Stripe et clé secrète Supabase sur le serveur,
 et textes légaux complets (plus aucun passage « [À COMPLÉTER » dans les quatre textes). L'état s'affiche dans
@@ -62,23 +71,24 @@ en ligne de commande de Stripe) et reporter le secret affiché dans `STRIPE_WEBH
 
 ## Scripts
 
-| Commande                                                                                    | Rôle                                                                                       |
-| ------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------ |
-| `npm run dev` / `build` / `start`                                                           | Application                                                                                |
-| `npm run lint`, `npm run typecheck`, `npm run format`                                       | Qualité du code                                                                            |
-| `npm test`                                                                                  | Tests de logique (contenu, quiz, progression, réglages, décors, filigrane, montants)       |
-| `npm run test:db`                                                                           | Tests de la base : RLS, accès, codes, parties, administration, import, vente (base locale) |
-| `npm run test:e2e`                                                                          | Parcours Playwright sur 4 configurations (base locale requise ; voir plus bas)             |
-| `npm run content:import -- <fichier> [--publier] [--essai]`                                 | Importe une matière                                                                        |
-| `npm run content:verify -- <fichier>`                                                       | Vérifie que la base contient exactement le fichier                                         |
-| `npm run beta:code -- [--utilisations=N] [--libelle=…] [--code=…] [--fin-acces=AAAA-MM-JJ]` | Crée un code bêta                                                                          |
-| `npm run admin:add -- <email> [--retirer]`                                                  | Donne ou retire le rôle d'administrateur                                                   |
-| `npm run db:reset`, `npm run db:types`                                                      | Recrée la base locale, régénère les types TypeScript                                       |
+| Commande                                                                                    | Rôle                                                                                        |
+| ------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------- |
+| `npm run dev` / `build` / `start`                                                           | Application                                                                                 |
+| `npm run lint`, `npm run typecheck`, `npm run format`                                       | Qualité du code                                                                             |
+| `npm test`                                                                                  | Tests de logique (contenu, quiz, progression, réglages, décors, filigrane, montants, notes) |
+| `npm run test:db`                                                                           | Tests de la base : RLS, accès, codes, parties, administration, import, vente, phase 2       |
+| `npm run test:e2e`                                                                          | Parcours Playwright sur 4 configurations (base locale requise ; voir plus bas)              |
+| `npm run content:import -- <fichier> [--publier] [--essai]`                                 | Importe une matière                                                                         |
+| `npm run content:verify -- <fichier>`                                                       | Vérifie que la base contient exactement le fichier                                          |
+| `npm run beta:code -- [--utilisations=N] [--libelle=…] [--code=…] [--fin-acces=AAAA-MM-JJ]` | Crée un code bêta                                                                           |
+| `npm run admin:add -- <email> [--retirer]`                                                  | Donne ou retire le rôle d'administrateur                                                    |
+| `npm run db:reset`, `npm run db:types`                                                      | Recrée la base locale, régénère les types TypeScript                                        |
 
 Les tests de parcours construisent l'application (port 3100) et lancent un **faux Stripe** local
 (`tests/e2e/fake-stripe.ts`, port 12111) : sessions de paiement, page de paiement et notifications signées comme
 celles de Stripe, sans aucune clé réelle. Le temps des tests, ils ouvrent la vente (textes légaux complétés,
-dates de partiels), déposent un PDF d'exemple et créent leurs comptes ; tout est effacé ou rétabli à la fin.
+dates de partiels), déposent un PDF d'exemple, créent une matière avec un chapitre Premium et deux examens
+blancs, ouvrent le parrainage et créent leurs comptes ; tout est effacé ou rétabli à la fin.
 Pour les jouer sur le vrai contenu : `E2E_CONTENT=content/questions.json npm run test:e2e`.
 
 ## Mise en production
@@ -111,6 +121,15 @@ Pour les jouer sur le vrai contenu : `E2E_CONTENT=content/questions.json npm run
      (12 € jusqu'à une date : les deux premières semaines de vente), fin de la bêta ;
    - `/admin/cours` : un PDF par chapitre, tel que fourni par l'auteur ;
    - `/admin/questions` : les questions du mini-quiz de démonstration (filtre « Questions de la démo »).
+7. **Phase 2**, quand vous le décidez :
+   - `/admin/examens` : créer les examens blancs (matière, chapitres, niveaux, nombre de questions, durée) ; un
+     examen se prépare masqué, puis « Proposé aux étudiants » ;
+   - **Premium** : réserver des chapitres avant leur publication (`/admin/matieres`, ou `"premium": true` dans
+     le fichier) et créer des examens blancs Premium ; ajouter le Pass Année Premium aux CGV (clause proposée
+     dans `/admin/reglages`) ; fixer son prix (35 € par défaut) et cocher « En vente » dans `/admin/vente`. Il
+     n'apparaît sur la page Tarifs qu'avec deux exclusivités réellement disponibles ;
+   - **Parrainage** : ajouter la clause aux CGV (proposée dans `/admin/reglages`), régler la réduction du
+     filleul (2 € par défaut), les jours offerts au parrain (7) et le plafond annuel (10), puis l'ouvrir.
 
 ## Choix techniques
 
@@ -144,6 +163,21 @@ Pour les jouer sur le vrai contenu : `E2E_CONTENT=content/questions.json npm run
 - **Décors, son, hors ligne** : inchangés depuis la phase 0 (décors et moteur sonore du prototype, parties
   terminées hors connexion envoyées au retour du réseau, aucune page mise en cache).
 - **Vie privée** : pas de cookie de suivi ; cookies de session et d'appareil seulement.
+- **Déblocage des niveaux** : décidé par la base (`level_unlocked`) à partir des parties enregistrées : une
+  partie complète (toutes les questions visibles du niveau), hors « Refaire mes erreurs », réussie à 70 % au
+  moins. Un niveau précédent sans question visible ne bloque pas ; les parties jouées avant la phase 2 comptent.
+- **Examens blancs** : la base tire les questions (parmi celles que l'étudiant a le droit de voir) et fixe
+  l'heure de fin ; le navigateur ne reçoit ni les bonnes réponses ni les explications pendant l'épreuve. Les
+  réponses sont gardées dans le navigateur jusqu'à la copie, qui part d'elle-même à la fin du temps ; une copie
+  arrivée plus de deux minutes après l'heure de fin (page fermée, par exemple) est notée mais signalée « hors
+  délai ». Note sur 20 arrondie au demi-point, détail par chapitre, correction complète.
+- **Premium** : chaque chapitre et chaque examen note sa première publication ; la base refuse de passer en
+  Premium un contenu déjà publié (administration comme import). Le passage au Premium depuis un Pass Année en
+  cours (même date de fin) déduit le montant déjà payé. Les testeurs de la bêta ont tout.
+- **Parrainage** : lien personnel (`/inscription?parrain=CODE`) ; la réduction s'applique au premier achat du
+  filleul. Les jours offerts au parrain forment un accès à part, qui prend la suite de son accès en cours ;
+  ils sont retirés si l'achat du filleul est remboursé. Rien entre deux comptes vus sur le même navigateur ;
+  plafond annuel.
 
 ## Points à trancher par l'auteur
 
@@ -160,14 +194,19 @@ Pour les jouer sur le vrai contenu : `E2E_CONTENT=content/questions.json npm run
 - **Taille des PDF** : jusqu'à 50 Mo acceptés ; un fichier léger (images compressées) s'ouvre bien plus vite sur
   téléphone.
 - **Le dépôt GitHub est public** : contenu, prototype et cahier des charges n'y figurent pas.
+- **Phase 2** : prix du Premium (35 € par défaut, dans la fourchette de 35 à 39 € du cahier des charges),
+  conditions du parrainage (2 € pour le filleul, 7 jours pour le parrain, 10 par an) et clauses des CGV
+  correspondantes. Les CGV ne sont jamais modifiées automatiquement : `/admin/reglages` propose un texte, et
+  signale l'offre ouverte que les CGV en vigueur ne mentionnent pas.
 
 ## Organisation du code
 
 ```
-src/app/            pages (accueil, comptes, tarifs, paiement, cours, lecture, quiz, compte, textes, administration)
+src/app/            pages (accueil, comptes, tarifs, paiement, cours, lecture, quiz, examens, parrainage, compte,
+                    textes, administration)
 src/app/api/        notifications Stripe, cours en PDF filigranés, aperçus
 src/app/actions/    actions serveur (comptes, quiz, commande, réglages, administration)
-src/components/     décor, son, quiz, lecteur de PDF, en-tête, formulaires
+src/components/     décor, son, quiz, examens blancs, lecteur de PDF, en-tête, formulaires
 src/lib/pdf/        filigrane, aperçu, contrôle des fichiers déposés
 src/lib/            accès, offres, paiements, appareils, dates, montants
 supabase/           configuration locale, migrations SQL, modèles d'e-mails

@@ -31,6 +31,14 @@ test.describe("parcours étudiant", () => {
 
     await expect(page.getByRole("heading", { name: content.subject.title })).toBeVisible();
     const scores: { href: string; score: number; total: number }[] = [];
+    const lastChapter = content.chapters[content.chapters.length - 1];
+    const lastLevel = [...LEVEL_IDS].reverse().find((level) => questionsOf(lastChapter, level).length)!;
+
+    // Les niveaux s'ouvrent l'un après l'autre (70 % au niveau précédent).
+    const firstHref = `/cours/${content.subject.slug}/${content.chapters[0].slug}`;
+    await page.goto(firstHref);
+    await expect(page.locator(`a[href="${firstHref}/confirme"]`)).toHaveCount(0);
+    await expect(page.getByText("Verrouillé").first()).toBeVisible();
 
     for (const chapter of content.chapters) {
       for (const level of LEVEL_IDS) {
@@ -54,9 +62,11 @@ test.describe("parcours étudiant", () => {
           ).toBeAttached();
           if (question.review_status === "a_relire")
             await expect(page.locator(".kind.review")).toHaveText("En cours de relecture");
-          // Une réponse sur deux est juste : on voit les deux corrections.
-          const choice = index % 2 === 0 ? question.correct_option : wrongOption(question);
-          if (index % 2 === 0) score++;
+          // Tout juste, pour débloquer le niveau suivant ; au dernier niveau, une réponse sur deux
+          // est fausse : on voit les deux corrections.
+          const wrong = chapter === lastChapter && level === lastLevel && index % 2 === 1;
+          const choice = wrong ? wrongOption(question) : question.correct_option;
+          if (!wrong) score++;
           await answer(page, question, choice, !isMobile);
           await nextQuestion(page);
         }
@@ -68,8 +78,6 @@ test.describe("parcours étudiant", () => {
     }
 
     // « Refaire mes erreurs » depuis l'écran de résultats : seules les questions manquées reviennent.
-    const lastChapter = content.chapters[content.chapters.length - 1];
-    const lastLevel = [...LEVEL_IDS].reverse().find((level) => questionsOf(lastChapter, level).length)!;
     const missed = questionsOf(lastChapter, lastLevel).filter((_, index) => index % 2 === 1);
     await page.getByRole("button", { name: "Refaire mes erreurs" }).click();
     await expect(page.locator(".qhead .lvl")).toContainText("(erreurs)");

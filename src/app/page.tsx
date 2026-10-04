@@ -2,8 +2,9 @@ import Link from "next/link";
 import { Emblem } from "@/components/emblem";
 import { SceneSetter } from "@/components/scene-setter";
 import { getViewer } from "@/lib/auth";
-import { getSubjects } from "@/lib/data/catalog";
+import { getNewChapterIds, getSubjects } from "@/lib/data/catalog";
 import { getDocuments } from "@/lib/data/documents";
+import { getOffers } from "@/lib/data/offers";
 import { HOME_DECOR } from "@/lib/decors/registry";
 import { LEVELS } from "@/lib/levels";
 import { createClient } from "@/lib/supabase/server";
@@ -12,12 +13,21 @@ export default async function HomePage({ searchParams }: PageProps<"/">) {
   const { compte } = await searchParams;
   const viewer = await getViewer();
   const supabase = await createClient();
-  const subjects = await getSubjects(supabase);
+  const [subjects, news, offers, settings, exams] = await Promise.all([
+    getSubjects(supabase),
+    getNewChapterIds(supabase),
+    getOffers(supabase),
+    supabase.from("settings").select("levels_unlock").maybeSingle(),
+    supabase.from("mock_exams").select("id", { count: "exact", head: true }).eq("visible", true),
+  ]);
   const published = subjects.filter((subject) => subject.visible);
   const documents = await getDocuments(
     supabase,
     published.flatMap((subject) => subject.chapters.map((chapter) => chapter.id)),
   );
+  const premiumOnSale = offers.some((offer) => offer.plan === "pass_annee_premium" && offer.available);
+  const levelsUnlock = settings.data?.levels_unlock ?? true;
+  const hasExams = (exams.count ?? 0) > 0;
 
   return (
     <>
@@ -78,10 +88,22 @@ export default async function HomePage({ searchParams }: PageProps<"/">) {
             (couverture, sommaire).
           </li>
           <li>
-            <strong>Pass</strong> : tous les quiz et tous les cours en PDF, jusqu&rsquo;à une date de fin
-            connue avant l&rsquo;achat ; paiement unique, sans abonnement.{" "}
-            <Link href="/tarifs">Voir les tarifs</Link>
+            <strong>Pass</strong> : tous les quiz et tous les cours en PDF
+            {premiumOnSale ? " (hors exclusivités Premium)" : ""}, jusqu&rsquo;à une date de fin connue avant
+            l&rsquo;achat ; paiement unique, sans abonnement. <Link href="/tarifs">Voir les tarifs</Link>
           </li>
+          {premiumOnSale && (
+            <li>
+              <strong>Pass Année Premium</strong> : tout le Pass Année, plus des exclusivités (chapitres et
+              examens blancs réservés).
+            </li>
+          )}
+          {hasExams && (
+            <li>
+              <strong>Examens blancs</strong> : des questions tirées au hasard, en temps limité, avec la
+              correction complète et une note sur 20 à la fin.
+            </li>
+          )}
           <li>
             <strong>Bêta</strong> : les testeurs invités ont un accès gratuit jusqu&rsquo;à la fin de la bêta
             ; les questions qui n&rsquo;ont pas encore été relues portent la mention « en cours de relecture
@@ -110,7 +132,11 @@ export default async function HomePage({ searchParams }: PageProps<"/">) {
                   {chapter.number}
                 </span>
                 <div>
-                  <h3>{chapter.title}</h3>
+                  <h3>
+                    {chapter.title}
+                    {news.has(chapter.id) && <span className="pill new title-pill">Nouveau</span>}
+                    {chapter.premium && <span className="pill premium title-pill">Premium</span>}
+                  </h3>
                   <p>{chapter.summary}</p>
                 </div>
                 {document && document.previewPages > 0 && (
@@ -134,6 +160,9 @@ export default async function HomePage({ searchParams }: PageProps<"/">) {
           ))}
         </ul>
         <p>
+          {levelsUnlock
+            ? "Chaque niveau s’ouvre à partir de 70 % de bonnes réponses au niveau précédent. "
+            : ""}
           À la fin de chaque niveau : ton score, le détail des réponses avec leurs explications, et un bouton
           « Refaire mes erreurs ». JuriQuizz ne remplace ni le cours, ni les manuels, ni les indications de
           tes enseignants. <Link href="/a-propos">En savoir plus</Link>.

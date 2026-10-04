@@ -3,8 +3,8 @@ import { notFound, redirect } from "next/navigation";
 import { QuizRunner } from "@/components/quiz/quiz-runner";
 import { SceneSetter } from "@/components/scene-setter";
 import { requireAccess } from "@/lib/auth";
-import { getChapter, getMyQuestionStatus, getQuizQuestions } from "@/lib/data/catalog";
-import { isLevelId, levelInfo } from "@/lib/levels";
+import { getChapter, getLevelAccess, getMyQuestionStatus, getQuizQuestions } from "@/lib/data/catalog";
+import { isLevelId, levelInfo, nextLevel } from "@/lib/levels";
 import { openErrors } from "@/lib/quiz/progress";
 import { createClient } from "@/lib/supabase/server";
 
@@ -28,8 +28,14 @@ export default async function QuizPage({
   if (!found) notFound();
   const { subject, chapter } = found;
   const chapterHref = `/cours/${subject.slug}/${chapter.slug}`;
-  const questions = await getQuizQuestions(supabase, chapter.id, niveau);
+  const [questions, access] = await Promise.all([
+    getQuizQuestions(supabase, chapter.id, niveau),
+    getLevelAccess(supabase, chapter.id),
+  ]);
+  // Niveau pas encore débloqué (70 % au niveau précédent) : retour au chapitre, avec l'explication.
+  if (!access[niveau]) redirect(`${chapterHref}?verrou=${niveau}`);
   if (questions.length === 0) redirect(chapterHref);
+  const next = nextLevel(niveau);
 
   let startIds: string[] | null = null;
   if (mode === "erreurs") {
@@ -57,6 +63,7 @@ export default async function QuizPage({
         level={niveau}
         questions={questions}
         startIds={startIds}
+        next={next ? { level: next, unlocked: access[next] } : null}
       />
     </>
   );

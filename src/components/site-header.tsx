@@ -15,6 +15,7 @@ export function SiteHeader({ viewer }: { viewer: Viewer | null }) {
         {viewer?.hasAccess ? (
           <>
             <NavLink href="/cours">Cours</NavLink>
+            {(viewer.hasExams || viewer.isAdmin) && <NavLink href="/examens">Examens</NavLink>}
             <NavLink href="/progression">Progression</NavLink>
             <NavLink href="/compte">Compte</NavLink>
           </>

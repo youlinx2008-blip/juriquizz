@@ -3,6 +3,9 @@ import Link from "next/link";
 import { SceneSetter } from "@/components/scene-setter";
 import { requireAccess } from "@/lib/auth";
 import { getMyAttempts, getMyQuestionStatus, getSubjects, getVisibleQuestionRefs } from "@/lib/data/catalog";
+import { getExams, getMyExamAttempts } from "@/lib/data/exams";
+import { formatDayTime } from "@/lib/dates";
+import { onTwenty } from "@/lib/exam-format";
 import { LEVELS } from "@/lib/levels";
 import { summarizeAttempts } from "@/lib/quiz/progress";
 import { createClient } from "@/lib/supabase/server";
@@ -16,12 +19,18 @@ function percent(part: number, total: number): string {
 export default async function ProgressPage() {
   await requireAccess("/progression");
   const supabase = await createClient();
-  const [subjects, refs, attempts, statuses] = await Promise.all([
+  const [subjects, refs, attempts, statuses, exams, examAttempts] = await Promise.all([
     getSubjects(supabase),
     getVisibleQuestionRefs(supabase),
     getMyAttempts(supabase),
     getMyQuestionStatus(supabase),
+    getExams(supabase),
+    getMyExamAttempts(supabase),
   ]);
+  const examById = new Map(exams.map((exam) => [exam.id, exam]));
+  const copies = examAttempts
+    .filter((attempt) => attempt.submittedAt && attempt.total && examById.has(attempt.examId))
+    .slice(0, 10);
   const progress = summarizeAttempts(attempts);
   const lastAnswer = new Map(statuses.map((status) => [status.question_id, status.last_correct]));
   const visible = new Set(refs.map((ref) => ref.id));
@@ -55,6 +64,30 @@ export default async function ProgressPage() {
           </div>
         </div>
       </section>
+
+      {copies.length > 0 && (
+        <section className="paper pad" aria-labelledby="progression-examens">
+          <h2 id="progression-examens" style={{ margin: "0 0 10px", fontFamily: "var(--serif)" }}>
+            Examens blancs
+          </h2>
+          <ul className="exam-breakdown">
+            {copies.map((attempt) => {
+              const exam = examById.get(attempt.examId)!;
+              return (
+                <li key={attempt.id}>
+                  <Link href={`/examens/${exam.subjectSlug}/${exam.slug}/copie/${attempt.id}`}>
+                    {exam.title}, {formatDayTime(attempt.submittedAt!)}
+                  </Link>
+                  <span>
+                    {onTwenty(attempt.score ?? 0, attempt.total!)}/20
+                    {attempt.late ? " (hors délai)" : ""}
+                  </span>
+                </li>
+              );
+            })}
+          </ul>
+        </section>
+      )}
 
       {subjects.map((subject) => (
         <section className="paper" key={subject.id} aria-labelledby={`progression-${subject.slug}`}>

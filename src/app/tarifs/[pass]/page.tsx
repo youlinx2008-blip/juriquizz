@@ -3,7 +3,7 @@ import Link from "next/link";
 import { notFound } from "next/navigation";
 import { SceneSetter } from "@/components/scene-setter";
 import { requireViewer } from "@/lib/auth";
-import { getOffers, offerTerm } from "@/lib/data/offers";
+import { discountLabel, getOffers, getPremiumExclusives, getQuote, offerTerm } from "@/lib/data/offers";
 import { formatDay } from "@/lib/dates";
 import { formatEuros } from "@/lib/money";
 import { planFromSlug, planName } from "@/lib/plans";
@@ -23,25 +23,27 @@ export default async function OrderPage({ params, searchParams }: PageProps<"/ta
   if (!plan) notFound();
   const viewer = await requireViewer(`/tarifs/${pass}`);
   const supabase = await createClient();
-  const [offers, sales] = await Promise.all([getOffers(supabase), getSalesStatus(supabase)]);
+  const [offers, sales, quote, exclusives] = await Promise.all([
+    getOffers(supabase),
+    getSalesStatus(supabase),
+    getQuote(supabase, plan),
+    getPremiumExclusives(supabase),
+  ]);
   const offer = offers.find((item) => item.plan === plan);
-  if (!offer) notFound();
+  if (!offer || !quote) notFound();
+  const premium = plan === "pass_annee_premium";
 
-  // L'administration garde la possibilité d'acheter (paiements de test).
-  const unlimited = viewer.hasAccess && viewer.accessEndsAt === null && !viewer.isAdmin;
-  const covered =
-    unlimited ||
-    (viewer.accessEndsAt !== null &&
-      offer.endsAt !== null &&
-      Date.parse(viewer.accessEndsAt) >= Date.parse(offer.endsAt));
+  const covered = quote.covered;
   const blocker = !sales.open
     ? "La vente des pass ouvrira prochainement."
     : !offer.available || offer.endsAt === null
       ? "Ce pass n’est pas en vente pour le moment."
       : covered
-        ? viewer.accessEndsAt
-          ? `Ton accès actuel court jusqu’au ${formatDay(viewer.accessEndsAt)}, au-delà de la fin de ce pass : il ne t’apporterait rien.`
-          : "Ton accès actuel n’a pas de date de fin : ce pass ne t’apporterait rien."
+        ? premium
+          ? "Ton accès comprend déjà les exclusivités Premium jusqu’à la fin de ce pass : il ne t’apporterait rien."
+          : viewer.accessEndsAt
+            ? `Ton accès actuel court jusqu’au ${formatDay(viewer.accessEndsAt)}, au-delà de la fin de ce pass : il ne t’apporterait rien.`
+            : "Ton accès actuel n’a pas de date de fin : ce pass ne t’apporterait rien."
         : null;
 
   return (
@@ -62,7 +64,23 @@ export default async function OrderPage({ params, searchParams }: PageProps<"/ta
         )}
         <dl className="order-summary">
           <dt>Contenu</dt>
-          <dd>Tous les quiz et tous les cours en PDF disponibles</dd>
+          <dd>
+            {premium
+              ? "Tous les quiz et tous les cours en PDF disponibles, plus les exclusivités Premium"
+              : exclusives.length > 0
+                ? "Tous les quiz et tous les cours en PDF disponibles, hors exclusivités Premium"
+                : "Tous les quiz et tous les cours en PDF disponibles"}
+            {premium && exclusives.length > 0 && (
+              <ul className="exclusives" style={{ fontWeight: 400 }}>
+                {exclusives.map((item) => (
+                  <li key={item.id}>
+                    {item.kind === "examen" ? "Examen blanc : " : ""}
+                    {item.title} <span>({item.subjectTitle})</span>
+                  </li>
+                ))}
+              </ul>
+            )}
+          </dd>
           <dt>Durée</dt>
           <dd>{offerTerm(offer)}</dd>
           {offer.endsAt && (
@@ -73,19 +91,29 @@ export default async function OrderPage({ params, searchParams }: PageProps<"/ta
           )}
           <dt>Prix</dt>
           <dd>
-            {formatEuros(offer.priceCents)} TTC, paiement unique
+            {formatEuros(quote.offerPriceCents)} TTC, paiement unique
             {offer.promoUntil && offer.priceCents < offer.regularPriceCents
               ? ` (prix de lancement jusqu’au ${formatDay(offer.promoUntil)}, puis ${formatEuros(offer.regularPriceCents)})`
               : ""}
           </dd>
+          {quote.discountCents > 0 && !covered && (
+            <>
+              <dt>{discountLabel(quote.discountReason)}</dt>
+              <dd>−{formatEuros(quote.discountCents)}</dd>
+              <dt>À payer</dt>
+              <dd>{formatEuros(quote.priceCents)} TTC</dd>
+            </>
+          )}
           <dt>Compte</dt>
           <dd>{viewer.email}</dd>
         </dl>
         <p className="fine" style={{ marginTop: 12 }}>
           Aucun renouvellement automatique : l&rsquo;accès se ferme de lui-même à la date de fin.
-          {viewer.hasAccess && viewer.accessEndsAt && !covered
-            ? ` Le pass prend effet dès le paiement ; il ne prolonge pas ton accès actuel (jusqu’au ${formatDay(viewer.accessEndsAt)}).`
-            : ""}
+          {quote.discountReason === "passage_premium"
+            ? " Le Premium s’ajoute à ton Pass Année dès le paiement, jusqu’à la même date de fin : le montant déjà payé est déduit."
+            : viewer.hasAccess && viewer.accessEndsAt && !covered
+              ? ` Le pass prend effet dès le paiement ; il ne prolonge pas ton accès actuel (jusqu’au ${formatDay(viewer.accessEndsAt)}).`
+              : ""}
         </p>
       </section>
 
@@ -105,7 +133,7 @@ export default async function OrderPage({ params, searchParams }: PageProps<"/ta
             </div>
           </>
         ) : (
-          <OrderForm plan={plan} priceLabel={formatEuros(offer.priceCents)} />
+          <OrderForm plan={plan} priceLabel={formatEuros(quote.priceCents)} />
         )}
       </section>
     </>

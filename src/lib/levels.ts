@@ -23,3 +23,11 @@ export function levelInfo(id: LevelId): LevelInfo {
   if (!info) throw new Error(`Niveau inconnu : ${id}`);
   return info;
 }
+
+export function previousLevel(id: LevelId): LevelId | null {
+  return LEVEL_IDS[LEVEL_IDS.indexOf(id) - 1] ?? null;
+}
+
+export function nextLevel(id: LevelId): LevelId | null {
+  return LEVEL_IDS[LEVEL_IDS.indexOf(id) + 1] ?? null;
+}

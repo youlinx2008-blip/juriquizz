@@ -5,8 +5,9 @@ import { signOutAction } from "@/app/actions/auth";
 import { SceneSetter } from "@/components/scene-setter";
 import { OfferPrice } from "@/components/sales/offer-price";
 import { requireViewer, safeNext } from "@/lib/auth";
-import { getOffers } from "@/lib/data/offers";
+import { getOffers, getQuote } from "@/lib/data/offers";
 import { formatDay } from "@/lib/dates";
+import { formatEuros } from "@/lib/money";
 import { getSalesStatus } from "@/lib/sales";
 import { createClient } from "@/lib/supabase/server";
 import { RedeemForm } from "./redeem-form";
@@ -22,6 +23,9 @@ export default async function AccessPage({ searchParams }: PageProps<"/acces">) 
   const supabase = await createClient();
   const [offers, sales] = await Promise.all([getOffers(supabase), getSalesStatus(supabase)]);
   const available = sales.open ? offers.filter((offer) => offer.available) : [];
+  // Filleul d'un parrainage : la réduction s'applique à son premier achat.
+  const quote = available.length ? await getQuote(supabase, available[0].plan) : null;
+  const referralDiscount = quote?.discountReason === "parrainage" ? quote.discountCents : 0;
 
   return (
     <>
@@ -41,9 +45,15 @@ export default async function AccessPage({ searchParams }: PageProps<"/acces">) 
             <h1 className="title small">Bienvenue sur JuriQuizz</h1>
             <p className="lead">
               Ton compte est prêt. Essaie le mini-quiz de démonstration, feuillette l&rsquo;aperçu des cours,
-              puis choisis un pass pour accéder à tous les quiz et à tous les cours en PDF.
+              puis choisis un pass pour accéder aux quiz et aux cours en PDF.
             </p>
           </>
+        )}
+        {referralDiscount > 0 && (
+          <p className="notice good" style={{ marginTop: 14 }}>
+            Invitation de parrainage : {formatEuros(referralDiscount)} de réduction sur ton premier pass,
+            appliqués automatiquement à la commande.
+          </p>
         )}
         <div className="actions">
           <Link className="btn primary" href="/demo">

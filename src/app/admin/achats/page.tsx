@@ -14,6 +14,11 @@ const STATUS: Record<string, string> = {
   expire: "Abandonné",
 };
 
+const DISCOUNTS: Record<string, string> = {
+  parrainage: "parrainage",
+  passage_premium: "Pass Année déduit",
+};
+
 export default async function AdminPurchasesPage() {
   const supabase = await createClient();
   const { data, error } = await supabase.rpc("admin_payments", { p_limit: 300 });
@@ -55,6 +60,7 @@ export default async function AdminPurchasesPage() {
                   <th scope="col">Compte</th>
                   <th scope="col">Pass</th>
                   <th scope="col">Montant</th>
+                  <th scope="col">Réduction</th>
                   <th scope="col">État</th>
                   <th scope="col">Fin de l&rsquo;accès</th>
                   <th scope="col">Référence Stripe</th>
@@ -67,6 +73,11 @@ export default async function AdminPurchasesPage() {
                     <td>{payment.email ?? <em>compte supprimé</em>}</td>
                     <td>{planName(payment.plan)}</td>
                     <td className="num-cell">{formatEuros(payment.amount_cents)}</td>
+                    <td className="num-cell">
+                      {payment.discount_cents
+                        ? `−${formatEuros(payment.discount_cents)} (${DISCOUNTS[payment.discount_reason ?? ""] ?? "réduction"})`
+                        : "–"}
+                    </td>
                     <td>
                       {STATUS[payment.status] ?? payment.status}
                       {payment.refunded_at ? ` le ${formatDay(payment.refunded_at)}` : ""}

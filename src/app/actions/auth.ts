@@ -30,6 +30,13 @@ const signUpSchema = z
     displayName: z.string().trim().max(60, "Pseudo : 60 caractères au plus.").default(""),
     email,
     betaCode: z.string().trim().max(40, "Code invalide.").default(""),
+    // Code de parrainage d'un lien d'invitation (ignoré s'il est mal formé ; la base vérifie le reste).
+    referralCode: z
+      .string()
+      .trim()
+      .toUpperCase()
+      .catch("")
+      .transform((value) => (/^[A-Z2-9]{8}$/.test(value) ? value : "")),
     method: z.enum(["password", "link"]),
     password: z.string().default(""),
     acceptTerms: z.literal("on", { error: "Accepte les conditions d’utilisation pour créer ton compte." }),
@@ -60,6 +67,7 @@ export async function signUpAction(_prev: AuthFormState, formData: FormData): Pr
     displayName: formData.get("displayName") ?? "",
     email: formData.get("email"),
     betaCode: formData.get("betaCode") ?? "",
+    referralCode: formData.get("referralCode") ?? "",
     method: formData.get("method"),
     password: formData.get("password") ?? "",
     acceptTerms: formData.get("acceptTerms"),
@@ -89,6 +97,7 @@ export async function signUpAction(_prev: AuthFormState, formData: FormData): Pr
   const metadata = {
     display_name: input.displayName,
     ...(input.betaCode ? { beta_code: input.betaCode } : {}),
+    ...(input.referralCode ? { referral_code: input.referralCode } : {}),
     ...(cgu ? { terms_version: String(cgu.version) } : {}),
   };
   const next = safeNext(formData.get("next"), input.betaCode ? "/cours" : "/acces");

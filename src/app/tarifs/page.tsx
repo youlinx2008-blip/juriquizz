@@ -3,8 +3,9 @@ import Link from "next/link";
 import { SceneSetter } from "@/components/scene-setter";
 import { OfferPrice } from "@/components/sales/offer-price";
 import { getViewer } from "@/lib/auth";
-import { getOffers } from "@/lib/data/offers";
+import { discountLabel, getOffers, getPremiumExclusives, getQuote, type Quote } from "@/lib/data/offers";
 import { formatDay } from "@/lib/dates";
+import { formatEuros } from "@/lib/money";
 import { getSalesStatus } from "@/lib/sales";
 import { createClient } from "@/lib/supabase/server";
 
@@ -16,13 +17,22 @@ export const metadata: Metadata = {
 
 export default async function PricingPage() {
   const supabase = await createClient();
-  const [viewer, offers, sales] = await Promise.all([
+  const [viewer, allOffers, sales, exclusives] = await Promise.all([
     getViewer(),
     getOffers(supabase),
     getSalesStatus(supabase),
+    getPremiumExclusives(supabase),
   ]);
-  // L'administration garde la possibilité d'acheter (paiements de test).
-  const unlimited = viewer?.hasAccess === true && viewer.accessEndsAt === null && !viewer.isAdmin;
+  // Le Premium n'apparaît qu'une fois en vente (deux exclusivités réellement disponibles au moins).
+  const offers = allOffers.filter((offer) => offer.plan !== "pass_annee_premium" || offer.available);
+  const premiumOnSale = offers.some((offer) => offer.plan === "pass_annee_premium");
+  // Prix et couverture propres au compte connecté (réduction de parrainage, passage au Premium).
+  const quotes = new Map<string, Quote>();
+  if (viewer) {
+    for (const quote of await Promise.all(offers.map((offer) => getQuote(supabase, offer.plan)))) {
+      if (quote) quotes.set(quote.plan, quote);
+    }
+  }
 
   return (
     <>
@@ -32,8 +42,8 @@ export default async function PricingPage() {
         <h1 className="title small">Choisir un pass</h1>
         <p className="lead">
           Un paiement unique, sans abonnement : chaque pass donne accès à tous les quiz et à tous les cours en
-          PDF jusqu&rsquo;à une date de fin indiquée avant l&rsquo;achat. L&rsquo;accès se ferme ensuite de
-          lui-même.
+          PDF{premiumOnSale ? " (hors exclusivités du Pass Année Premium)" : ""} jusqu&rsquo;à une date de fin
+          indiquée avant l&rsquo;achat. L&rsquo;accès se ferme ensuite de lui-même.
         </p>
         {viewer?.hasAccess && viewer.accessEndsAt && (
           <p className="notice good" role="status" style={{ marginTop: 14 }}>
@@ -55,16 +65,27 @@ export default async function PricingPage() {
 
       <section className="paper" aria-label="Pass disponibles">
         {offers.map((offer) => {
-          const covered =
-            unlimited ||
-            (viewer?.accessEndsAt != null &&
-              offer.endsAt !== null &&
-              Date.parse(viewer.accessEndsAt) >= Date.parse(offer.endsAt));
+          const quote = quotes.get(offer.plan);
+          const covered = quote?.covered === true;
+          const premium = offer.plan === "pass_annee_premium";
           return (
             <div className="row offer" key={offer.plan}>
               <div>
-                <h2>{offer.label}</h2>
+                <h2>
+                  {offer.label}
+                  {premium && <span className="pill premium title-pill">Exclusivités</span>}
+                </h2>
                 <p>{offer.description}</p>
+                {premium && exclusives.length > 0 && (
+                  <ul className="exclusives">
+                    {exclusives.map((item) => (
+                      <li key={item.id}>
+                        {item.kind === "examen" ? "Examen blanc : " : ""}
+                        {item.title} <span>({item.subjectTitle})</span>
+                      </li>
+                    ))}
+                  </ul>
+                )}
                 <div className="meta">
                   {offer.endsAt === null ? (
                     <span>Dates des partiels bientôt annoncées</span>
@@ -74,6 +95,13 @@ export default async function PricingPage() {
                       <strong>{formatDay(offer.endsAt)}</strong>
                     </span>
                   )}
+                  {quote && quote.discountCents > 0 && !covered && (
+                    <span className="personal-price">
+                      Pour toi : <strong>{formatEuros(quote.priceCents)}</strong> (
+                      {discountLabel(quote.discountReason).toLowerCase()}, −{formatEuros(quote.discountCents)}
+                      )
+                    </span>
+                  )}
                 </div>
               </div>
               <OfferPrice offer={offer} />
@@ -81,7 +109,9 @@ export default async function PricingPage() {
                 {!offer.available || !sales.open ? (
                   <span className="pill">Bientôt disponible</span>
                 ) : covered ? (
-                  <span className="pill">Déjà couvert par ton accès</span>
+                  <span className="pill">
+                    {premium ? "Déjà inclus dans ton accès" : "Déjà couvert par ton accès"}
+                  </span>
                 ) : (
                   <Link className="btn primary" href={`/tarifs/${offer.slug}`}>
                     Choisir<span className="visually-hidden"> le {offer.label}</span>

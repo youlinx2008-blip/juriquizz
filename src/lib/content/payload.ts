@@ -16,6 +16,8 @@ export type ImportChapter = {
   summary: string;
   default_decor: DecorKey;
   position: number;
+  /** Absent : le chapitre garde son réglage actuel. */
+  premium?: boolean;
   questions: ImportQuestion[];
 };
 
@@ -49,6 +51,7 @@ export function toImportPayload(source: SourceSubject): ImportPayload {
       summary: chapter.resume,
       default_decor: chapter.decor_par_defaut,
       position: chapterIndex,
+      ...(chapter.premium === undefined ? {} : { premium: chapter.premium }),
       questions: LEVEL_IDS.flatMap((level) =>
         (chapter.niveaux[level] ?? []).map((question, index) => ({
           id: question.id,

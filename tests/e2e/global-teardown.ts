@@ -31,4 +31,5 @@ export default async function globalTeardown() {
   for (const plan of data.restore.plans) {
     await client.from("plans").update({ on_sale: plan.on_sale }).eq("id", plan.id);
   }
+  if (data.restore.settings) await client.from("settings").update(data.restore.settings).eq("id", true);
 }

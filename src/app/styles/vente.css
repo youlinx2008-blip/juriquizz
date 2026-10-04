@@ -32,6 +32,17 @@
   color: var(--ink2);
   font-size: 0.8rem;
 }
+.exclusives {
+  margin: 8px 0 0;
+  padding-left: 20px;
+  font-size: 0.93rem;
+}
+.exclusives span {
+  color: var(--ink2);
+}
+.personal-price {
+  color: var(--ink);
+}
 @media (max-width: 560px) {
   .row.offer {
     grid-template-columns: 1fr auto;
@@ -164,4 +175,61 @@
   margin-bottom: 14px;
   padding-top: 14px;
   padding-bottom: 14px;
+}
+
+/* Phase 2 : Premium, niveaux verrouillés, nouveautés. */
+.pill.premium {
+  border-color: var(--accent);
+  color: var(--accent);
+  font-weight: 700;
+}
+.pill.locked {
+  color: var(--ink2);
+}
+.pill.new {
+  border-color: var(--good);
+  color: var(--good);
+  font-weight: 700;
+}
+.title-pill {
+  margin-left: 10px;
+  vertical-align: middle;
+  font-family: system-ui, sans-serif;
+  font-size: 0.75rem;
+  letter-spacing: 0;
+}
+.admin-chapters {
+  margin: 10px 0 0;
+  padding: 0;
+  list-style: none;
+}
+.admin-chapters li {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px 14px;
+  padding: 8px 0;
+  border-top: 1px solid var(--line);
+}
+.clause {
+  margin: 10px 0 0;
+  padding: 12px 14px;
+  border: 1px solid var(--line);
+  border-radius: 10px;
+  background: var(--paper2);
+  font-family: inherit;
+  font-size: 0.9rem;
+  line-height: 1.5;
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+}
+.share-link input {
+  width: 100%;
+  padding: 10px 12px;
+  border: 1px solid var(--line);
+  border-radius: 10px;
+  background: var(--paper2);
+  color: var(--ink);
+  font: inherit;
 }

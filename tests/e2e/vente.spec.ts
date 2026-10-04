@@ -1,7 +1,7 @@
 import AxeBuilder from "@axe-core/playwright";
 import { expect, test, type Page } from "@playwright/test";
 import { createServiceClient } from "../../scripts/lib/service-client";
-import { PASSWORD, run, signUp, uniqueEmail } from "./support";
+import { buy, PASSWORD, run, signUp, startPayment, uniqueEmail } from "./support";
 
 /*
  * Vente (phase 1), avec le faux Stripe lancé par la configuration des tests.
@@ -25,23 +25,6 @@ async function announcedEnd(plan: string): Promise<string> {
   const offer = data.find((item) => item.plan === plan);
   if (!offer?.ends_at) throw new Error(`Offre ${plan} sans date de fin`);
   return DAY.format(new Date(offer.ends_at));
-}
-
-/** Commande d'un pass jusqu'à la page de paiement (du faux Stripe). */
-async function startPayment(page: Page, slug: string): Promise<void> {
-  await page.goto(`/tarifs/${slug}`);
-  await page.getByLabel(/J’ai lu et j’accepte les/).check();
-  await page.getByLabel(/Je demande l’accès immédiat/).check();
-  await page.getByRole("button", { name: /^Payer/ }).click();
-  await expect(page).toHaveURL(/127\.0\.0\.1:\d+\/pay\/cs_test_/);
-}
-
-/** Achat d'un pass jusqu'au retour sur JuriQuizz ; renvoie l'identifiant de l'achat. */
-async function buy(page: Page, slug: string, button = "Payer"): Promise<string> {
-  await startPayment(page, slug);
-  await page.getByRole("button", { name: button, exact: true }).click();
-  await expect(page).toHaveURL(/\/paiement\/merci\?achat=/);
-  return new URL(page.url()).searchParams.get("achat")!;
 }
 
 async function buyerOf(paymentId: string): Promise<string> {
@@ -84,7 +67,7 @@ test.describe("vente des pass", () => {
     await page.getByRole("link", { name: "Commencer à réviser" }).click();
     await expect(page).toHaveURL(/\/cours$/);
     const nav = page.getByRole("navigation", { name: "Navigation principale" });
-    await expect(nav.getByRole("link")).toHaveText(["Cours", "Progression", "Compte"]);
+    await expect(nav.getByRole("link")).toHaveText(["Cours", "Examens", "Progression", "Compte"]);
     await page.goto("/compte#achats");
     await expect(page.locator("#achats")).toContainText("Pass Partiels");
   });
@@ -156,9 +139,14 @@ test.describe("vente des pass", () => {
     await expect(pages.first()).toHaveAttribute("data-rendered", "true", { timeout: 30_000 });
     await expect(pages.first().locator(".textLayer")).toContainText("Aperçu gratuit - JuriQuizz");
     await page.getByRole("link", { name: "Voir les pass" }).click();
-    await expect(page.locator(".row.offer h2")).toHaveText(["Pass Mensuel", "Pass Partiels", "Pass Année"]);
+    await expect(page.locator(".row.offer h2")).toHaveText([
+      "Pass Mensuel",
+      "Pass Partiels",
+      "Pass Année",
+      /^Pass Année Premium/,
+    ]);
     // Commander demande un compte.
-    await page.getByRole("link", { name: "Choisir le Pass Année" }).click();
+    await page.getByRole("link", { name: "Choisir le Pass Année", exact: true }).click();
     await expect(page).toHaveURL(/\/connexion\?suite=%2Ftarifs%2Fannee$/);
   });
 

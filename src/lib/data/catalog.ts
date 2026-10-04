@@ -15,6 +15,10 @@ export type Chapter = {
   summary: string;
   defaultDecor: DecorKey;
   position: number;
+  /** Réservé au Pass Année Premium. */
+  premium: boolean;
+  /** Première mise à disposition des étudiants (null : jamais publié). */
+  publishedAt: string | null;
 };
 
 export type Subject = {
@@ -46,6 +50,8 @@ function toChapter(row: {
   summary: string;
   default_decor: string;
   position: number;
+  premium: boolean;
+  published_at: string | null;
 }): Chapter {
   return {
     id: row.id,
@@ -57,10 +63,13 @@ function toChapter(row: {
     summary: row.summary,
     defaultDecor: isDecorKey(row.default_decor) ? row.default_decor : "codex",
     position: row.position,
+    premium: row.premium,
+    publishedAt: row.published_at,
   };
 }
 
-const CHAPTER_COLUMNS = "id, subject_id, slug, number, label, title, summary, default_decor, position";
+const CHAPTER_COLUMNS =
+  "id, subject_id, slug, number, label, title, summary, default_decor, position, premium, published_at";
 
 /** Matières lisibles par l'utilisateur (publiées, ou toutes pour l'administration), avec leurs chapitres. */
 export async function getSubjects(supabase: ServerClient): Promise<Subject[]> {
@@ -209,4 +218,28 @@ export async function getMyAttempts(supabase: ServerClient, chapterId?: string):
 
 export async function getMyQuestionStatus(supabase: ServerClient, chapterId?: string) {
   return rows(await supabase.rpc("my_question_status", chapterId ? { p_chapter_id: chapterId } : {}));
+}
+
+/** Niveaux ouverts dans un chapitre : le suivant se débloque à 70 % au niveau précédent. */
+export async function getLevelAccess(
+  supabase: ServerClient,
+  chapterId: string,
+): Promise<Record<LevelId, boolean>> {
+  const access: Record<LevelId, boolean> = { facile: true, intermediaire: true, confirme: true };
+  for (const row of rows(await supabase.rpc("my_level_access", { p_chapter_id: chapterId }))) {
+    if (isLevelId(row.level)) access[row.level] = row.unlocked;
+  }
+  return access;
+}
+
+const NEW_FOR_DAYS = 21;
+
+/** Chapitres mis à disposition (publication ou première question) depuis moins de trois semaines. */
+export async function getNewChapterIds(supabase: ServerClient): Promise<Set<string>> {
+  const limit = Date.now() - NEW_FOR_DAYS * 86_400_000;
+  return new Set(
+    rows(await supabase.rpc("chapter_news"))
+      .filter((row) => Date.parse(row.available_at) > limit)
+      .map((row) => row.chapter_id),
+  );
 }

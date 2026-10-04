@@ -26,6 +26,7 @@ export default async function PreviewPage({ params }: PageProps<"/apercu/[matier
   const document = await getDocument(supabase, chapter.id);
   if (!document || document.previewPages === 0) notFound();
   const shown = Math.min(document.previewPages, document.pageCount);
+  const canRead = chapter.premium ? viewer?.hasPremium === true : viewer?.hasAccess === true;
 
   return (
     <>
@@ -37,18 +38,21 @@ export default async function PreviewPage({ params }: PageProps<"/apercu/[matier
         <h1 className="title small">{document.title || chapter.title}</h1>
         <p className="lead">
           {shown === 1 ? "La première page" : `Les ${shown} premières pages`} du cours, sur{" "}
-          {document.pageCount}. Le cours complet est réservé aux détenteurs d&rsquo;un pass ; chaque
-          exemplaire porte le nom de son lecteur.
+          {document.pageCount}.{" "}
+          {chapter.premium
+            ? "Le cours complet fait partie des exclusivités du Pass Année Premium"
+            : "Le cours complet est réservé aux détenteurs d’un pass"}{" "}
+          ; chaque exemplaire porte le nom de son lecteur.
         </p>
         <div className="actions">
-          {viewer?.hasAccess ? (
+          {canRead ? (
             <Link className="btn primary" href={`/cours/${subject.slug}/${chapter.slug}/lecture`}>
               Lire le cours complet
             </Link>
           ) : (
             <>
-              <Link className="btn primary" href="/tarifs">
-                Voir les pass
+              <Link className="btn primary" href={chapter.premium ? "/tarifs/premium" : "/tarifs"}>
+                {chapter.premium ? "Découvrir le Premium" : "Voir les pass"}
               </Link>
               {!viewer && (
                 <Link className="btn" href="/inscription">

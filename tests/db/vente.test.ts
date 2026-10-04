@@ -62,6 +62,7 @@ describe("offres et dates de fin", () => {
         ["pass_mensuel", true],
         ["pass_partiels", false],
         ["pass_annee", false],
+        ["pass_annee_premium", false],
       ]);
       await openSales(db);
       await asAnon(db);

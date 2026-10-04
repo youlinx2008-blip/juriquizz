@@ -63,13 +63,13 @@ isOneToOne: false
                   ]
                 },"attempts": {
                   Row: {
-                    "chapter_id": string,"created_at": string,"id": string,"level": Database["public"]['Enums']["level"],"retry": boolean,"score": number,"total": number,"user_id": string
+                    "chapter_id": string,"complete": boolean,"created_at": string,"id": string,"level": Database["public"]['Enums']["level"],"retry": boolean,"score": number,"total": number,"user_id": string
                   }
                   Insert: {
-                    "chapter_id": string,"created_at"?: string,"id"?: string,"level": Database["public"]['Enums']["level"],"retry"?: boolean,"score": number,"total": number,"user_id": string
+                    "chapter_id": string,"complete"?: boolean,"created_at"?: string,"id"?: string,"level": Database["public"]['Enums']["level"],"retry"?: boolean,"score": number,"total": number,"user_id": string
                   }
                   Update: {
-                    "chapter_id"?: string,"created_at"?: string,"id"?: string,"level"?: Database["public"]['Enums']["level"],"retry"?: boolean,"score"?: number,"total"?: number,"user_id"?: string
+                    "chapter_id"?: string,"complete"?: boolean,"created_at"?: string,"id"?: string,"level"?: Database["public"]['Enums']["level"],"retry"?: boolean,"score"?: number,"total"?: number,"user_id"?: string
                   }
                   Relationships: [
                     {
@@ -95,13 +95,13 @@ isOneToOne: false
                   ]
                 },"chapters": {
                   Row: {
-                    "created_at": string,"default_decor": Database["public"]['Enums']["decor"],"id": string,"label": string,"number": string,"position": number,"slug": string,"subject_id": string,"summary": string,"title": string,"updated_at": string
+                    "created_at": string,"default_decor": Database["public"]['Enums']["decor"],"id": string,"label": string,"number": string,"position": number,"premium": boolean,"published_at": string | null,"slug": string,"subject_id": string,"summary": string,"title": string,"updated_at": string
                   }
                   Insert: {
-                    "created_at"?: string,"default_decor": Database["public"]['Enums']["decor"],"id"?: string,"label": string,"number": string,"position": number,"slug": string,"subject_id": string,"summary"?: string,"title": string,"updated_at"?: string
+                    "created_at"?: string,"default_decor": Database["public"]['Enums']["decor"],"id"?: string,"label": string,"number": string,"position": number,"premium"?: boolean,"published_at"?: string | null,"slug": string,"subject_id": string,"summary"?: string,"title": string,"updated_at"?: string
                   }
                   Update: {
-                    "created_at"?: string,"default_decor"?: Database["public"]['Enums']["decor"],"id"?: string,"label"?: string,"number"?: string,"position"?: number,"slug"?: string,"subject_id"?: string,"summary"?: string,"title"?: string,"updated_at"?: string
+                    "created_at"?: string,"default_decor"?: Database["public"]['Enums']["decor"],"id"?: string,"label"?: string,"number"?: string,"position"?: number,"premium"?: boolean,"published_at"?: string | null,"slug"?: string,"subject_id"?: string,"summary"?: string,"title"?: string,"updated_at"?: string
                   }
                   Relationships: [
                     {
@@ -146,13 +146,13 @@ isOneToOne: true
                   ]
                 },"entitlements": {
                   Row: {
-                    "beta_code": string | null,"created_at": string,"ends_at": string | null,"id": string,"payment_id": string | null,"plan": Database["public"]['Enums']["plan"],"source": string,"starts_at": string,"user_id": string
+                    "beta_code": string | null,"created_at": string,"ends_at": string | null,"id": string,"payment_id": string | null,"plan": Database["public"]['Enums']["plan"],"referral_payment_id": string | null,"source": string,"starts_at": string,"user_id": string
                   }
                   Insert: {
-                    "beta_code"?: string | null,"created_at"?: string,"ends_at"?: string | null,"id"?: string,"payment_id"?: string | null,"plan": Database["public"]['Enums']["plan"],"source": string,"starts_at"?: string,"user_id": string
+                    "beta_code"?: string | null,"created_at"?: string,"ends_at"?: string | null,"id"?: string,"payment_id"?: string | null,"plan": Database["public"]['Enums']["plan"],"referral_payment_id"?: string | null,"source": string,"starts_at"?: string,"user_id": string
                   }
                   Update: {
-                    "beta_code"?: string | null,"created_at"?: string,"ends_at"?: string | null,"id"?: string,"payment_id"?: string | null,"plan"?: Database["public"]['Enums']["plan"],"source"?: string,"starts_at"?: string,"user_id"?: string
+                    "beta_code"?: string | null,"created_at"?: string,"ends_at"?: string | null,"id"?: string,"payment_id"?: string | null,"plan"?: Database["public"]['Enums']["plan"],"referral_payment_id"?: string | null,"source"?: string,"starts_at"?: string,"user_id"?: string
                   }
                   Relationships: [
                     {
@@ -166,6 +166,31 @@ isOneToOne: false
       columns: ["payment_id"]
 isOneToOne: false
       referencedRelation: "payments"
+      referencedColumns: ["id"]
+    },{
+      foreignKeyName: "entitlements_referral_payment_id_fkey"
+      columns: ["referral_payment_id"]
+isOneToOne: false
+      referencedRelation: "payments"
+      referencedColumns: ["id"]
+    }
+                  ]
+                },"exam_attempts": {
+                  Row: {
+                    "answers": Json | null,"deadline": string,"exam_id": string,"id": string,"late": boolean | null,"question_ids": (string)[],"score": number | null,"started_at": string,"submitted_at": string | null,"total": number | null,"user_id": string
+                  }
+                  Insert: {
+                    "answers"?: Json | null,"deadline": string,"exam_id": string,"id"?: string,"late"?: boolean | null,"question_ids": (string)[],"score"?: number | null,"started_at"?: string,"submitted_at"?: string | null,"total"?: number | null,"user_id": string
+                  }
+                  Update: {
+                    "answers"?: Json | null,"deadline"?: string,"exam_id"?: string,"id"?: string,"late"?: boolean | null,"question_ids"?: (string)[],"score"?: number | null,"started_at"?: string,"submitted_at"?: string | null,"total"?: number | null,"user_id"?: string
+                  }
+                  Relationships: [
+                    {
+      foreignKeyName: "exam_attempts_exam_id_fkey"
+      columns: ["exam_id"]
+isOneToOne: false
+      referencedRelation: "mock_exams"
       referencedColumns: ["id"]
     }
                   ]
@@ -233,15 +258,34 @@ isOneToOne: false
                   Relationships: [
                     
                   ]
-                },"payments": {
+                },"mock_exams": {
                   Row: {
-                    "amount_cents": number,"cgv_version": number,"created_at": string,"currency": string,"id": string,"paid_at": string | null,"plan": Database["public"]['Enums']["plan"],"quoted_ends_at": string,"refunded_at": string | null,"status": string,"stripe_payment_intent": string | null,"stripe_session_id": string | null,"user_id": string | null,"withdrawal_waiver_at": string
+                    "chapter_ids": (string)[],"created_at": string,"description": string,"duration_minutes": number,"id": string,"levels": (Database["public"]['Enums']["level"])[],"position": number,"premium": boolean,"published_at": string | null,"question_count": number,"slug": string,"subject_id": string,"title": string,"updated_at": string,"visible": boolean
                   }
                   Insert: {
-                    "amount_cents": number,"cgv_version": number,"created_at"?: string,"currency"?: string,"id"?: string,"paid_at"?: string | null,"plan": Database["public"]['Enums']["plan"],"quoted_ends_at": string,"refunded_at"?: string | null,"status"?: string,"stripe_payment_intent"?: string | null,"stripe_session_id"?: string | null,"user_id"?: string | null,"withdrawal_waiver_at": string
+                    "chapter_ids"?: (string)[],"created_at"?: string,"description"?: string,"duration_minutes": number,"id"?: string,"levels"?: (Database["public"]['Enums']["level"])[],"position"?: number,"premium"?: boolean,"published_at"?: string | null,"question_count": number,"slug": string,"subject_id": string,"title": string,"updated_at"?: string,"visible"?: boolean
                   }
                   Update: {
-                    "amount_cents"?: number,"cgv_version"?: number,"created_at"?: string,"currency"?: string,"id"?: string,"paid_at"?: string | null,"plan"?: Database["public"]['Enums']["plan"],"quoted_ends_at"?: string,"refunded_at"?: string | null,"status"?: string,"stripe_payment_intent"?: string | null,"stripe_session_id"?: string | null,"user_id"?: string | null,"withdrawal_waiver_at"?: string
+                    "chapter_ids"?: (string)[],"created_at"?: string,"description"?: string,"duration_minutes"?: number,"id"?: string,"levels"?: (Database["public"]['Enums']["level"])[],"position"?: number,"premium"?: boolean,"published_at"?: string | null,"question_count"?: number,"slug"?: string,"subject_id"?: string,"title"?: string,"updated_at"?: string,"visible"?: boolean
+                  }
+                  Relationships: [
+                    {
+      foreignKeyName: "mock_exams_subject_id_fkey"
+      columns: ["subject_id"]
+isOneToOne: false
+      referencedRelation: "subjects"
+      referencedColumns: ["id"]
+    }
+                  ]
+                },"payments": {
+                  Row: {
+                    "amount_cents": number,"cgv_version": number,"created_at": string,"currency": string,"discount_cents": number,"discount_reason": string | null,"id": string,"paid_at": string | null,"plan": Database["public"]['Enums']["plan"],"quoted_ends_at": string,"referrer_id": string | null,"refunded_at": string | null,"status": string,"stripe_payment_intent": string | null,"stripe_session_id": string | null,"user_id": string | null,"withdrawal_waiver_at": string
+                  }
+                  Insert: {
+                    "amount_cents": number,"cgv_version": number,"created_at"?: string,"currency"?: string,"discount_cents"?: number,"discount_reason"?: string | null,"id"?: string,"paid_at"?: string | null,"plan": Database["public"]['Enums']["plan"],"quoted_ends_at": string,"referrer_id"?: string | null,"refunded_at"?: string | null,"status"?: string,"stripe_payment_intent"?: string | null,"stripe_session_id"?: string | null,"user_id"?: string | null,"withdrawal_waiver_at": string
+                  }
+                  Update: {
+                    "amount_cents"?: number,"cgv_version"?: number,"created_at"?: string,"currency"?: string,"discount_cents"?: number,"discount_reason"?: string | null,"id"?: string,"paid_at"?: string | null,"plan"?: Database["public"]['Enums']["plan"],"quoted_ends_at"?: string,"referrer_id"?: string | null,"refunded_at"?: string | null,"status"?: string,"stripe_payment_intent"?: string | null,"stripe_session_id"?: string | null,"user_id"?: string | null,"withdrawal_waiver_at"?: string
                   }
                   Relationships: [
                     
@@ -280,13 +324,13 @@ isOneToOne: false
                   ]
                 },"profiles": {
                   Row: {
-                    "created_at": string,"decor_pref": string | null,"display_name": string,"full_name": string | null,"id": string,"sound_pref": string | null,"terms_accepted_at": string | null,"terms_version": number | null,"theme_pref": string | null,"updated_at": string,"volume": number | null
+                    "created_at": string,"decor_pref": string | null,"display_name": string,"full_name": string | null,"id": string,"referred_at": string | null,"referred_by": string | null,"sound_pref": string | null,"terms_accepted_at": string | null,"terms_version": number | null,"theme_pref": string | null,"updated_at": string,"volume": number | null
                   }
                   Insert: {
-                    "created_at"?: string,"decor_pref"?: string | null,"display_name"?: string,"full_name"?: string | null,"id": string,"sound_pref"?: string | null,"terms_accepted_at"?: string | null,"terms_version"?: number | null,"theme_pref"?: string | null,"updated_at"?: string,"volume"?: number | null
+                    "created_at"?: string,"decor_pref"?: string | null,"display_name"?: string,"full_name"?: string | null,"id": string,"referred_at"?: string | null,"referred_by"?: string | null,"sound_pref"?: string | null,"terms_accepted_at"?: string | null,"terms_version"?: number | null,"theme_pref"?: string | null,"updated_at"?: string,"volume"?: number | null
                   }
                   Update: {
-                    "created_at"?: string,"decor_pref"?: string | null,"display_name"?: string,"full_name"?: string | null,"id"?: string,"sound_pref"?: string | null,"terms_accepted_at"?: string | null,"terms_version"?: number | null,"theme_pref"?: string | null,"updated_at"?: string,"volume"?: number | null
+                    "created_at"?: string,"decor_pref"?: string | null,"display_name"?: string,"full_name"?: string | null,"id"?: string,"referred_at"?: string | null,"referred_by"?: string | null,"sound_pref"?: string | null,"terms_accepted_at"?: string | null,"terms_version"?: number | null,"theme_pref"?: string | null,"updated_at"?: string,"volume"?: number | null
                   }
                   Relationships: [
                     
@@ -310,15 +354,28 @@ isOneToOne: false
       referencedColumns: ["id"]
     }
                   ]
-                },"settings": {
+                },"referral_codes": {
                   Row: {
-                    "beta_ends_at": string | null,"id": boolean,"updated_at": string
+                    "code": string,"created_at": string,"user_id": string
                   }
                   Insert: {
-                    "beta_ends_at"?: string | null,"id"?: boolean,"updated_at"?: string
+                    "code": string,"created_at"?: string,"user_id": string
                   }
                   Update: {
-                    "beta_ends_at"?: string | null,"id"?: boolean,"updated_at"?: string
+                    "code"?: string,"created_at"?: string,"user_id"?: string
+                  }
+                  Relationships: [
+                    
+                  ]
+                },"settings": {
+                  Row: {
+                    "beta_ends_at": string | null,"id": boolean,"levels_unlock": boolean,"referral_bonus_days": number,"referral_discount_cents": number,"referral_enabled": boolean,"referral_max_per_year": number,"updated_at": string
+                  }
+                  Insert: {
+                    "beta_ends_at"?: string | null,"id"?: boolean,"levels_unlock"?: boolean,"referral_bonus_days"?: number,"referral_discount_cents"?: number,"referral_enabled"?: boolean,"referral_max_per_year"?: number,"updated_at"?: string
+                  }
+                  Update: {
+                    "beta_ends_at"?: string | null,"id"?: boolean,"levels_unlock"?: boolean,"referral_bonus_days"?: number,"referral_discount_cents"?: number,"referral_enabled"?: boolean,"referral_max_per_year"?: number,"updated_at"?: string
                   }
                   Relationships: [
                     
@@ -344,6 +401,9 @@ isOneToOne: false
           Functions: {
             "accept_terms":
 { Args: { "p_version": number }; Returns: undefined
+                           },
+"access_chain_end":
+{ Args: { "p_user": string }; Returns: string
                            },
 "admin_create_beta_codes":
 { Args: { "p_access_ends_at"?: string,"p_code"?: string,"p_count": number,"p_expires_at"?: string,"p_label"?: string,"p_prefix"?: string,"p_uses_max": number }; Returns: {
@@ -373,7 +433,7 @@ isOneToOne: false
                            },
 "admin_payments":
 { Args: { "p_limit"?: number }; Returns: {
-              "amount_cents": number,"created_at": string,"email": string,"ends_at": string,"paid_at": string,"payment_id": string,"plan": Database["public"]['Enums']["plan"],"refunded_at": string,"status": string,"stripe_payment_intent": string
+              "amount_cents": number,"created_at": string,"discount_cents": number,"discount_reason": string,"email": string,"ends_at": string,"paid_at": string,"payment_id": string,"plan": Database["public"]['Enums']["plan"],"refunded_at": string,"status": string,"stripe_payment_intent": string
             }[]
                            },
 "admin_question_stats":
@@ -389,6 +449,9 @@ isOneToOne: false
                            },
 "admin_set_beta_end":
 { Args: { "p_ends_at": string }; Returns: number
+                           },
+"admin_set_chapter_premium":
+{ Args: { "p_chapter_id": string,"p_premium": boolean }; Returns: undefined
                            },
 "admin_set_question_demo":
 { Args: { "p_demo": boolean,"p_question_id": string }; Returns: undefined
@@ -420,6 +483,11 @@ isOneToOne: false
 "can_see_question":
 { Args: { "p_chapter_id": string,"p_retired_at": string,"p_status": Database["public"]['Enums']["review_status"] }; Returns: boolean
                            },
+"chapter_news":
+{ Args: Record<PropertyKey, never>; Returns: {
+              "available_at": string,"chapter_id": string
+            }[]
+                           },
 "check_beta_code":
 { Args: { "p_code": string }; Returns: string
                            },
@@ -428,6 +496,14 @@ isOneToOne: false
                            },
 "delete_my_account":
 { Args: Record<PropertyKey, never>; Returns: undefined
+                           },
+"exam_question_pool":
+{ Args: { "p_exam_id": string }; Returns: {
+              "question_id": string
+            }[]
+                           },
+"exam_relue_pool_size":
+{ Args: { "p_exam_id": string }; Returns: number
                            },
 "expire_checkout":
 { Args: { "p_session_id": string }; Returns: undefined
@@ -438,10 +514,16 @@ isOneToOne: false
 "grant_beta_from_code":
 { Args: { "p_code": string,"p_user": string }; Returns: string
                            },
+"grant_referral_reward":
+{ Args: { "p_payment_id": string }; Returns: string
+                           },
 "has_access":
 { Args: Record<PropertyKey, never>; Returns: boolean
                            },
 "has_beta_access":
+{ Args: Record<PropertyKey, never>; Returns: boolean
+                           },
+"has_premium":
 { Args: Record<PropertyKey, never>; Returns: boolean
                            },
 "import_subject":
@@ -453,10 +535,24 @@ isOneToOne: false
 "legal_ready":
 { Args: Record<PropertyKey, never>; Returns: boolean
                            },
+"level_unlocked":
+{ Args: { "p_chapter_id": string,"p_level": Database["public"]['Enums']["level"] }; Returns: boolean
+                           },
+"my_level_access":
+{ Args: { "p_chapter_id": string }; Returns: {
+              "level": Database["public"]['Enums']["level"],"unlocked": boolean
+            }[]
+                           },
 "my_question_status":
 { Args: { "p_chapter_id"?: string }; Returns: {
               "answered": number,"chapter_id": string,"last_answered_at": string,"last_correct": boolean,"level": Database["public"]['Enums']["level"],"question_id": string
             }[]
+                           },
+"my_referral_code":
+{ Args: Record<PropertyKey, never>; Returns: string
+                           },
+"my_referrals":
+{ Args: Record<PropertyKey, never>; Returns: Json
                            },
 "normalize_code":
 { Args: { "p_code": string }; Returns: string
@@ -469,11 +565,22 @@ isOneToOne: false
               "available": boolean,"description": string,"duration": string,"duration_days": number,"ends_at": string,"label": string,"plan": Database["public"]['Enums']["plan"],"price_cents": number,"promo_until": string,"regular_price_cents": number
             }[]
                            },
+"premium_exclusives":
+{ Args: Record<PropertyKey, never>; Returns: {
+              "item_id": string,"kind": string,"subject_title": string,"title": string
+            }[]
+                           },
+"quote_pass":
+{ Args: { "p_plan": Database["public"]['Enums']["plan"] }; Returns: Json
+                           },
 "random_beta_code":
 { Args: { "p_prefix": string }; Returns: string
                            },
 "redeem_beta_code":
 { Args: { "p_code": string }; Returns: string
+                           },
+"referral_invitation":
+{ Args: { "p_code": string }; Returns: Json
                            },
 "refund_payment":
 { Args: { "p_payment_intent": string }; Returns: Json
@@ -487,15 +594,21 @@ isOneToOne: false
 "start_checkout":
 { Args: { "p_accept_cgv": boolean,"p_plan": Database["public"]['Enums']["plan"],"p_waive_withdrawal": boolean }; Returns: Json
                            },
+"start_mock_exam":
+{ Args: { "p_exam_id": string }; Returns: Json
+                           },
 "submit_attempt":
 { Args: { "p_answers": Json,"p_chapter_id": string,"p_level": Database["public"]['Enums']["level"],"p_retry": boolean }; Returns: Json
+                           },
+"submit_mock_exam":
+{ Args: { "p_answers": Json,"p_attempt_id": string }; Returns: Json
                            },
 "viewer_context":
 { Args: Record<PropertyKey, never>; Returns: Json
                            }
           }
           Enums: {
-            "decor": "ruines"|"frontiere"|"codex"|"eglise"|"plaine"|"mer"|"chateau","feedback_rating": "claire"|"pas_claire"|"erreur","level": "facile"|"intermediaire"|"confirme","plan": "beta"|"pass_mensuel"|"pass_partiels"|"pass_annee","question_type": "qcm"|"vrai_faux"|"cas_pratique","review_status": "a_relire"|"relue"|"a_corriger"
+            "decor": "ruines"|"frontiere"|"codex"|"eglise"|"plaine"|"mer"|"chateau","feedback_rating": "claire"|"pas_claire"|"erreur","level": "facile"|"intermediaire"|"confirme","plan": "beta"|"pass_mensuel"|"pass_partiels"|"pass_annee"|"pass_annee_premium"|"parrainage","question_type": "qcm"|"vrai_faux"|"cas_pratique","review_status": "a_relire"|"relue"|"a_corriger"
           }
           CompositeTypes: {
             [_ in never]: never
@@ -615,7 +728,7 @@ export const Constants = {
           }
         },"public": {
           Enums: {
-            "decor": ["ruines", "frontiere", "codex", "eglise", "plaine", "mer", "chateau"],"feedback_rating": ["claire", "pas_claire", "erreur"],"level": ["facile", "intermediaire", "confirme"],"plan": ["beta", "pass_mensuel", "pass_partiels", "pass_annee"],"question_type": ["qcm", "vrai_faux", "cas_pratique"],"review_status": ["a_relire", "relue", "a_corriger"]
+            "decor": ["ruines", "frontiere", "codex", "eglise", "plaine", "mer", "chateau"],"feedback_rating": ["claire", "pas_claire", "erreur"],"level": ["facile", "intermediaire", "confirme"],"plan": ["beta", "pass_mensuel", "pass_partiels", "pass_annee", "pass_annee_premium", "parrainage"],"question_type": ["qcm", "vrai_faux", "cas_pratique"],"review_status": ["a_relire", "relue", "a_corriger"]
           }
         }
 } as const

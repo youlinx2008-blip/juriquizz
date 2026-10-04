@@ -5,6 +5,7 @@ import type { AdminFormState } from "@/app/actions/admin";
 import {
   addExamSessionAction,
   setBetaEndAction,
+  updateGrowthSettingsAction,
   updateLegalPageAction,
   updatePlanAction,
 } from "@/app/actions/admin-vente";
@@ -182,6 +183,83 @@ export function LegalPageForm({ slug, title, body }: { slug: string; title: stri
       <div>
         <button className="btn primary" type="submit" disabled={pending}>
           Enregistrer une nouvelle version
+        </button>
+      </div>
+    </form>
+  );
+}
+
+export type GrowthSettings = {
+  levelsUnlock: boolean;
+  referralEnabled: boolean;
+  referralDiscount: string;
+  referralBonusDays: number;
+  referralMaxPerYear: number;
+};
+
+export function GrowthSettingsForm({ settings }: { settings: GrowthSettings }) {
+  const id = useId();
+  const [state, action, pending] = useActionState<AdminFormState, FormData>(updateGrowthSettingsAction, {
+    status: "idle",
+  });
+  return (
+    <form className="form" action={action}>
+      <fieldset className="field radios">
+        <legend>Niveaux</legend>
+        <label>
+          <input type="checkbox" name="levelsUnlock" defaultChecked={settings.levelsUnlock} />
+          Débloquer le niveau suivant à partir de 70 % de bonnes réponses au niveau précédent
+        </label>
+      </fieldset>
+      <fieldset className="field radios">
+        <legend>Parrainage</legend>
+        <label>
+          <input type="checkbox" name="referralEnabled" defaultChecked={settings.referralEnabled} />
+          Parrainage ouvert (lien d&rsquo;invitation, réduction du filleul, jours offerts au parrain)
+        </label>
+      </fieldset>
+      <div className="filters" style={{ marginBottom: 0 }}>
+        <div className="field" style={{ maxWidth: 200 }}>
+          <label htmlFor={`${id}-discount`}>Réduction du filleul (€)</label>
+          <input
+            id={`${id}-discount`}
+            name="referralDiscount"
+            type="text"
+            inputMode="decimal"
+            defaultValue={settings.referralDiscount}
+            aria-describedby={`${id}-discount-help`}
+          />
+          <p className="help" id={`${id}-discount-help`}>
+            Sur son premier achat ; le prix payé reste de 0,50 € au moins.
+          </p>
+        </div>
+        <div className="field" style={{ maxWidth: 200 }}>
+          <label htmlFor={`${id}-days`}>Jours offerts au parrain</label>
+          <input
+            id={`${id}-days`}
+            name="referralBonusDays"
+            type="number"
+            min={0}
+            max={60}
+            defaultValue={settings.referralBonusDays}
+          />
+        </div>
+        <div className="field" style={{ maxWidth: 220 }}>
+          <label htmlFor={`${id}-max`}>Parrainages récompensés par an</label>
+          <input
+            id={`${id}-max`}
+            name="referralMaxPerYear"
+            type="number"
+            min={0}
+            max={100}
+            defaultValue={settings.referralMaxPerYear}
+          />
+        </div>
+      </div>
+      <Status state={state} />
+      <div>
+        <button className="btn primary" type="submit" disabled={pending}>
+          Enregistrer les réglages
         </button>
       </div>
     </form>

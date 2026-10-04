@@ -58,6 +58,21 @@ sont affichées **dans l'ordre du fichier**, jamais mélangées (les explication
 
 Un chapitre sans question apparaît « En préparation ».
 
+## Nouveaux chapitres et exclusivités Premium
+
+Ajouter un chapitre, c'est l'ajouter au fichier de sa matière et réimporter : il apparaît avec la mention
+« Nouveau » pendant trois semaines (à compter de sa publication ou de sa première question).
+
+Un chapitre peut être réservé au Pass Année Premium avec `"premium": true`, **seulement avant sa première
+publication** : un chapitre déjà proposé aux détenteurs des autres pass n'est jamais déplacé en Premium (l'import
+est alors refusé, rien n'est écrit). Le choix se fait aussi dans `/admin/matieres`. `"premium": false` ouvre au
+contraire le chapitre à tous les pass, à tout moment ; sans ce champ, l'import garde le choix fait dans
+l'administration.
+
+```jsonc
+{ "id": "chapitre-exclusif", "numero": "V", "libelle": "Chapitre V", "titre": "…", "premium": true, "niveaux": { … } }
+```
+
 ## Cours en PDF et démonstration
 
 Les cours en PDF ne passent pas par ce dossier : ils se déposent tels quels dans l'administration

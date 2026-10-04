@@ -63,3 +63,8 @@ export function parisDateInput(iso: string | null): string {
   if (!iso) return "";
   return new Date(iso).toLocaleDateString("en-CA", { timeZone: "Europe/Paris" });
 }
+
+/** Heure du serveur au moment du rendu (en millisecondes). */
+export function serverNow(): number {
+  return Date.now();
+}

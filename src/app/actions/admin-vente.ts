@@ -171,3 +171,51 @@ export async function setQuestionDemoAction(formData: FormData): Promise<void> {
   revalidatePath("/admin/questions");
   revalidatePath(`/admin/questions/${questionId}`);
 }
+
+const growthSettings = z.object({
+  referralDiscount: z.string().trim(),
+  referralBonusDays: z.coerce
+    .number("Nombre de jours invalide.")
+    .int("Nombre de jours entier attendu.")
+    .min(0, "0 jour au moins.")
+    .max(60, "60 jours au plus."),
+  referralMaxPerYear: z.coerce
+    .number("Plafond invalide.")
+    .int("Plafond entier attendu.")
+    .min(0, "0 au moins.")
+    .max(100, "100 au plus."),
+});
+
+/** Réglages de la phase 2 : déblocage des niveaux, parrainage. */
+export async function updateGrowthSettingsAction(
+  _prev: AdminFormState,
+  formData: FormData,
+): Promise<AdminFormState> {
+  await requireAdmin();
+  const parsed = growthSettings.safeParse({
+    referralDiscount: formData.get("referralDiscount") ?? "",
+    referralBonusDays: formData.get("referralBonusDays"),
+    referralMaxPerYear: formData.get("referralMaxPerYear"),
+  });
+  if (!parsed.success) return { status: "error", message: parsed.error.issues[0].message };
+  const discount = parseEuros(parsed.data.referralDiscount || "0");
+  if (discount === null || discount > 2000) {
+    return { status: "error", message: "Réduction du filleul : entre 0 et 20 €." };
+  }
+  const supabase = await createClient();
+  const { error } = await supabase
+    .from("settings")
+    .update({
+      levels_unlock: formData.get("levelsUnlock") === "on",
+      referral_enabled: formData.get("referralEnabled") === "on",
+      referral_discount_cents: discount,
+      referral_bonus_days: parsed.data.referralBonusDays,
+      referral_max_per_year: parsed.data.referralMaxPerYear,
+    })
+    .eq("id", true);
+  if (error) return { status: "error", message: `Enregistrement impossible : ${error.message}` };
+  revalidatePath("/admin/reglages");
+  revalidatePath("/parrainage");
+  revalidatePath("/cours", "layout");
+  return { status: "ok", message: "Réglages enregistrés." };
+}

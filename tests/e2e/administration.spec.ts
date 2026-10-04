@@ -106,3 +106,58 @@ test("les pages d'administration sont introuvables pour un étudiant", async ({ 
   const response = await page.goto("/admin/codes");
   expect(response?.status()).toBe(404);
 });
+
+test("l'administration crée, publie et supprime un examen blanc", async ({ browser }) => {
+  const { adminContent, runId } = run();
+  const admin = await adminPage(browser);
+  await admin.goto("/admin/examens");
+  const create = admin
+    .locator("section")
+    .filter({ has: admin.getByRole("heading", { name: "Nouvel examen" }) });
+  await create.getByLabel("Matière").selectOption({ label: adminContent.subject.title });
+  await create.getByLabel("Titre").fill(`Examen admin ${runId}`);
+  await create.getByLabel("Nombre de questions").fill("5");
+  await create.getByLabel("Durée (minutes)").fill("20");
+  await create.getByRole("button", { name: "Créer l’examen" }).click();
+  await expect(create.getByText("Examen créé.")).toBeVisible();
+
+  const section = admin
+    .locator("section")
+    .filter({ has: admin.getByRole("heading", { name: /^Examen admin/ }) });
+  await expect(section.getByRole("heading")).toContainText("Masqué");
+  await expect(section).toContainText("jamais publié");
+  await expect(section.getByRole("button", { name: /^Supprimer/ })).toBeVisible();
+
+  // Proposé aux étudiants : publié, il ne se supprime plus et ne peut plus devenir Premium.
+  await section.getByText("Modifier").click();
+  await section.getByLabel("Proposé aux étudiants").check();
+  await section.getByRole("button", { name: "Enregistrer l’examen" }).click();
+  await expect(section.getByText("Examen enregistré.")).toBeVisible();
+  await admin.reload();
+  await expect(section.getByRole("heading")).toContainText("Proposé");
+  await expect(section.getByRole("button", { name: /^Supprimer/ })).toHaveCount(0);
+  await section.getByText("Modifier").click();
+  await expect(section.getByLabel("Réservé au Pass Année Premium")).toBeDisabled();
+
+  // Un brouillon jamais publié se supprime.
+  await create.getByLabel("Matière").selectOption({ label: adminContent.subject.title });
+  await create.getByLabel("Titre").fill(`Brouillon ${runId}`);
+  await create.getByRole("button", { name: "Créer l’examen" }).click();
+  await expect(create.getByText("Examen créé.")).toBeVisible();
+  const draft = admin.locator("section").filter({ has: admin.getByRole("heading", { name: /^Brouillon/ }) });
+  await draft.getByRole("button", { name: /^Supprimer/ }).click();
+  await expect(draft).toHaveCount(0);
+  await admin.context().close();
+});
+
+test("les réglages de la phase 2 proposent les clauses des CGV", async ({ browser }) => {
+  const admin = await adminPage(browser);
+  await admin.goto("/admin/reglages");
+  await expect(admin.getByLabel(/Débloquer le niveau suivant/)).toBeVisible();
+  await expect(admin.getByLabel(/Parrainage ouvert/)).toBeChecked();
+  await admin.getByText("Clause proposée : parrainage").click();
+  await expect(admin.locator(".clause").first()).toContainText("7 jours d'accès offerts");
+  await admin.goto("/admin/vente");
+  await expect(admin.getByText(/Exclusivités réellement disponibles : \d+/)).toBeVisible();
+  await admin.context().close();
+});

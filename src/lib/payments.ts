@@ -1,13 +1,38 @@
 import "server-only";
 import type Stripe from "stripe";
 import { formatDay } from "@/lib/dates";
+import { formatEuros } from "@/lib/money";
 import { passSlug, planName, type PassPlan } from "@/lib/plans";
 import { getStripe } from "@/lib/stripe";
 import { siteUrl } from "@/lib/supabase/env";
 import { createServiceClient } from "@/lib/supabase/service";
 
-/** Achat enregistré par start_checkout : prix et date de fin figés avant le paiement. */
-export type Order = { payment_id: string; amount_cents: number; label: string; ends_at: string };
+/** Achat enregistré par start_checkout : prix (réduction déduite) et date de fin figés avant le paiement. */
+export type Order = {
+  payment_id: string;
+  amount_cents: number;
+  label: string;
+  ends_at: string;
+  discount_cents?: number;
+  discount_reason?: string | null;
+};
+
+/** Ce que couvre le pass, tel qu'annoncé sur la page de paiement. */
+function orderDescription(order: Order, plan: PassPlan, premiumExclusives: boolean): string {
+  const endsOn = formatDay(order.ends_at);
+  const content =
+    plan === "pass_annee_premium"
+      ? "Accès à tous les quiz et cours en PDF disponibles, exclusivités Premium comprises"
+      : premiumExclusives
+        ? "Accès à tous les quiz et cours en PDF disponibles, hors exclusivités Premium"
+        : "Accès à tous les quiz et cours en PDF disponibles";
+  const discount = order.discount_cents
+    ? order.discount_reason === "passage_premium"
+      ? ` Pass Année en cours déduit (${formatEuros(order.discount_cents)}).`
+      : ` Réduction de parrainage déduite (${formatEuros(order.discount_cents)}).`
+    : "";
+  return `${content}, jusqu’au ${endsOn} inclus. Paiement unique, sans renouvellement.${discount}`;
+}
 
 /** Erreur définitive (achat incohérent, inconnu…) : la renvoyer à Stripe ne servirait à rien. */
 export class PaymentError extends Error {}
@@ -19,6 +44,7 @@ export async function createCheckoutSession(
   order: Order,
   plan: PassPlan,
   buyer: { userId: string; email: string | null },
+  premiumExclusives = false,
 ): Promise<Stripe.Checkout.Session> {
   const endsOn = formatDay(order.ends_at);
   const name = planName(plan);
@@ -35,7 +61,7 @@ export async function createCheckoutSession(
             unit_amount: order.amount_cents,
             product_data: {
               name: `JuriQuizz, ${name}`,
-              description: `Accès à tous les quiz et cours en PDF disponibles, jusqu’au ${endsOn} inclus. Paiement unique, sans renouvellement.`,
+              description: orderDescription(order, plan, premiumExclusives),
             },
           },
         },

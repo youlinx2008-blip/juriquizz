@@ -38,9 +38,12 @@ export default async function globalSetup() {
   const content = loadContentFile(process.env.E2E_CONTENT ?? "tests/fixtures/matiere-exemple.json").payload;
   const adminContent = copyOf(example, "admin", runId, "Matière de test");
   const salesContent = copyOf(example, "vente", runId, "Matière de vente");
+  const growthContent = copyOf(example, "croissance", runId, "Matière Premium");
+  // Second chapitre réservé au Pass Année Premium dès sa publication.
+  growthContent.chapters[1] = { ...growthContent.chapters[1], premium: true };
   const createdSubjects: string[] = [];
 
-  for (const payload of [content, adminContent, salesContent]) {
+  for (const payload of [content, adminContent, salesContent, growthContent]) {
     const { data, error } = await client.rpc("import_subject", { p_payload: payload, p_publish: true });
     if (error) throw new Error(`Import du contenu de test impossible : ${error.message}`);
     const report = data as { subject_id: string; subject_created: boolean };
@@ -55,9 +58,16 @@ export default async function globalSetup() {
     .in("id", demoQuestionIds);
   if (demo.error) throw new Error(demo.error.message);
 
+  // Matière de la phase 2 : tout est relu (contenu proposé aux acheteurs, exclusivités Premium).
+  const growthIds = growthContent.chapters.flatMap((chapter) =>
+    chapter.questions.map((question) => question.id),
+  );
+  const relue = await client.from("questions").update({ review_status: "relue" }).in("id", growthIds);
+  if (relue.error) throw new Error(relue.error.message);
+
   // Les statuts de relecture en base priment sur ceux du fichier (ils ont pu être changés dans
   // l'administration) : on garde ceux de la base, et seulement les questions visibles des étudiants.
-  for (const payload of [content, adminContent, salesContent]) {
+  for (const payload of [content, adminContent, salesContent, growthContent]) {
     const ids = payload.chapters.flatMap((chapter) => chapter.questions.map((question) => question.id));
     const { data: rows, error } = await client
       .from("questions")
@@ -99,12 +109,40 @@ export default async function globalSetup() {
   });
   if (document.error) throw new Error(document.error.message);
 
+  // Examens blancs de la matière de la phase 2 : l'un pour tous les pass, l'autre Premium.
+  const { data: growthSubject, error: growthError } = await client
+    .from("subjects")
+    .select("id")
+    .eq("slug", growthContent.subject.slug)
+    .single();
+  if (growthError) throw new Error(growthError.message);
+  const exams = [
+    { title: `Examen blanc ${runId}`, slug: "examen-blanc", premium: false },
+    { title: `Examen blanc Premium ${runId}`, slug: "examen-premium", premium: true },
+  ];
+  const examInsert = await client.from("mock_exams").insert(
+    exams.map((exam, position) => ({
+      subject_id: growthSubject.id,
+      slug: exam.slug,
+      title: exam.title,
+      description: "Toute la matière, tous niveaux.",
+      question_count: 6,
+      duration_minutes: 30,
+      levels: ["facile", "intermediaire", "confirme"] as ("facile" | "intermediaire" | "confirme")[],
+      premium: exam.premium,
+      visible: true,
+      position,
+    })),
+  );
+  if (examInsert.error) throw new Error(examInsert.error.message);
+
   // Vente ouverte le temps des tests : textes légaux complétés, dates de partiels, offres en vente.
   const restore: RunData["restore"] = {
     legalPages: [],
     examSessionIds: [],
     plans: [],
     storagePaths: [storagePath],
+    settings: null,
   };
   const { data: legal } = await client.from("legal_pages").select("slug, body");
   for (const page of legal ?? []) {
@@ -139,6 +177,24 @@ export default async function globalSetup() {
     await client.from("plans").update({ on_sale: true }).eq("id", plan.id);
   }
 
+  // Parrainage ouvert, aux conditions par défaut.
+  const { data: settings, error: settingsError } = await client
+    .from("settings")
+    .select("referral_enabled, referral_discount_cents, referral_bonus_days, referral_max_per_year")
+    .single();
+  if (settingsError) throw new Error(settingsError.message);
+  restore.settings = settings;
+  const referral = await client
+    .from("settings")
+    .update({
+      referral_enabled: true,
+      referral_discount_cents: 200,
+      referral_bonus_days: 7,
+      referral_max_per_year: 10,
+    })
+    .eq("id", true);
+  if (referral.error) throw new Error(referral.error.message);
+
   const betaCode = `E2E-${runId}`;
   const codeInsert = await client
     .from("beta_codes")
@@ -167,6 +223,8 @@ export default async function globalSetup() {
     salesContent,
     demoQuestionIds,
     courseChapterSlug,
+    growthContent,
+    exams,
     createdSubjects,
     restore,
   };

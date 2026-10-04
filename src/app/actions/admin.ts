@@ -113,3 +113,18 @@ export async function createCodesAction(_prev: AdminFormState, formData: FormDat
   revalidatePath("/admin/codes");
   redirect(`/admin/codes?nouveaux=${encodeURIComponent((data ?? []).map((row) => row.code).join(","))}`);
 }
+
+/** Chapitre réservé (ou non) au Pass Année Premium : seulement avant sa publication pour le réserver. */
+export async function setChapterPremiumAction(formData: FormData): Promise<void> {
+  const chapterId = z.uuid().parse(formData.get("chapterId"));
+  const premium = formData.get("premium") === "true";
+  const supabase = await createClient();
+  const { error } = await supabase.rpc("admin_set_chapter_premium", {
+    p_chapter_id: chapterId,
+    p_premium: premium,
+  });
+  if (error && error.code !== "JQ403") throw new Error(error.message);
+  revalidatePath("/admin/matieres");
+  revalidatePath("/cours", "layout");
+  revalidatePath("/tarifs", "layout");
+}

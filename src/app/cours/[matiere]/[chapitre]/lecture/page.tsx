@@ -1,6 +1,6 @@
 import type { Metadata } from "next";
 import Link from "next/link";
-import { notFound } from "next/navigation";
+import { notFound, redirect } from "next/navigation";
 import { FullNameForm } from "@/app/compte/account-forms";
 import { PdfViewer } from "@/components/pdf/pdf-viewer";
 import { SceneSetter } from "@/components/scene-setter";
@@ -25,6 +25,8 @@ export default async function ReadingPage({ params }: PageProps<"/cours/[matiere
   const found = await getChapter(supabase, matiere, chapitre);
   if (!found) notFound();
   const { subject, chapter } = found;
+  // Exclusivité Premium : la page du chapitre présente l'offre.
+  if (chapter.premium && !viewer.hasPremium) redirect(`/cours/${subject.slug}/${chapter.slug}`);
   const document = await getDocument(supabase, chapter.id);
   if (!document) notFound();
 

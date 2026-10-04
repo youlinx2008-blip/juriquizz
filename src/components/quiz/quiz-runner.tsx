@@ -48,6 +48,8 @@ type Props = {
   startIds: string[] | null;
   /** Mini-quiz de démonstration (comptes sans pass) : rien n'est enregistré. */
   demo?: boolean;
+  /** Niveau suivant du chapitre, et s'il était déjà débloqué au début de la partie. */
+  next?: { level: LevelId; unlocked: boolean } | null;
 };
 
 function prefersReducedMotion(): boolean {
@@ -62,6 +64,7 @@ export function QuizRunner({
   questions,
   startIds,
   demo = false,
+  next = null,
 }: Props) {
   const [state, dispatch] = useReducer(quizReducer, null, (): QuizState => {
     if (!startIds) return startQuiz(questions);
@@ -117,6 +120,7 @@ export function QuizRunner({
         onRestart={(list, retry) => dispatch({ type: "restart", questions: list, retry })}
         allQuestions={questions}
         demo={demo}
+        next={next}
       />
     );
   }
@@ -310,6 +314,7 @@ function Results({
   onRestart,
   allQuestions,
   demo,
+  next,
 }: {
   state: QuizState;
   userId: string;
@@ -319,6 +324,7 @@ function Results({
   onRestart: (questions: QuizQuestion[], retry: boolean) => void;
   allQuestions: QuizQuestion[];
   demo: boolean;
+  next: { level: LevelId; unlocked: boolean } | null;
 }) {
   const { fx } = useSound();
   const { score, total } = scoreOf(state);
@@ -364,6 +370,18 @@ function Results({
   const message = passed
     ? "Niveau réussi : au moins 70 % de bonnes réponses."
     : "Relis les explications ci-dessous, puis retente : c’est en comprenant les pièges qu’on progresse.";
+  // Une partie complète réussie ouvre le niveau suivant (une fois la partie enregistrée).
+  const opensNext = !demo && !state.retry && passed && next !== null && (save === "saved" || next.unlocked);
+  const nextMessage =
+    demo || !next || state.retry
+      ? null
+      : opensNext
+        ? next.unlocked
+          ? `Niveau suivant : ${levelInfo(next.level).label}.`
+          : `Niveau ${levelInfo(next.level).label} débloqué !`
+        : next.unlocked
+          ? null
+          : `Le niveau ${levelInfo(next.level).label} se débloque à partir de 70 % de bonnes réponses.`;
 
   return (
     <section className="paper pad" aria-labelledby="resultats-titre">
@@ -381,6 +399,7 @@ function Results({
         <small> sur {total}</small>
       </p>
       <p className="msg">{message}</p>
+      {nextMessage && <p className="next-level">{nextMessage}</p>}
       <p className={`save-state${save === "rejected" ? " bad" : ""}`} role="status">
         {save === "saving" && "Enregistrement du score…"}
         {save === "saved" && "Score enregistré dans ta progression."}
@@ -402,6 +421,11 @@ function Results({
         >
           {demo ? "Rejouer la démonstration" : "Rejouer ce niveau"}
         </button>
+        {opensNext && next && (
+          <Link className="btn primary" href={`${chapterHref}/${next.level}`}>
+            Niveau suivant<span className="visually-hidden"> : {levelInfo(next.level).label}</span>
+          </Link>
+        )}
         {demo ? (
           <Link className="btn" href="/tarifs">
             Voir les pass

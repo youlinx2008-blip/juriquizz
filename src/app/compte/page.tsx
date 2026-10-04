@@ -19,24 +19,28 @@ export default async function AccountPage() {
   const viewer = await requireViewer("/compte");
   const supabase = await createClient();
   const browserKey = (await cookies()).get(DEVICE_COOKIE)?.value;
-  const [{ data: entitlements }, { data: payments }, { data: devices }] = await Promise.all([
-    supabase
-      .from("entitlements")
-      .select("id, plan, starts_at, ends_at")
-      .eq("user_id", viewer.userId)
-      .order("starts_at", { ascending: false }),
-    supabase
-      .from("payments")
-      .select("id, plan, status, amount_cents, paid_at, refunded_at, cgv_version")
-      .eq("user_id", viewer.userId)
-      .in("status", ["paye", "rembourse"])
-      .order("created_at", { ascending: false }),
-    supabase
-      .from("device_sessions")
-      .select("id, browser_key, label, created_at, last_seen_at")
-      .is("revoked_at", null)
-      .order("created_at", { ascending: false }),
-  ]);
+  const [{ data: entitlements }, { data: payments }, { data: devices }, { data: settings }] =
+    await Promise.all([
+      supabase
+        .from("entitlements")
+        .select("id, plan, starts_at, ends_at")
+        .eq("user_id", viewer.userId)
+        .order("starts_at", { ascending: false }),
+      supabase
+        .from("payments")
+        .select(
+          "id, plan, status, amount_cents, discount_cents, discount_reason, paid_at, refunded_at, cgv_version",
+        )
+        .eq("user_id", viewer.userId)
+        .in("status", ["paye", "rembourse"])
+        .order("created_at", { ascending: false }),
+      supabase
+        .from("device_sessions")
+        .select("id, browser_key, label, created_at, last_seen_at")
+        .is("revoked_at", null)
+        .order("created_at", { ascending: false }),
+      supabase.from("settings").select("referral_enabled").maybeSingle(),
+    ]);
 
   return (
     <>
@@ -96,7 +100,17 @@ export default async function AccountPage() {
                   <tr key={payment.id}>
                     <td className="num-cell">{payment.paid_at ? formatDay(payment.paid_at) : "–"}</td>
                     <td>{planName(payment.plan)}</td>
-                    <td className="num-cell">{formatEuros(payment.amount_cents)}</td>
+                    <td className="num-cell">
+                      {formatEuros(payment.amount_cents)}
+                      {payment.discount_cents > 0 && (
+                        <div className="fine">
+                          {payment.discount_reason === "passage_premium"
+                            ? "Pass Année déduit"
+                            : "Réduction de parrainage"}{" "}
+                          : −{formatEuros(payment.discount_cents)}
+                        </div>
+                      )}
+                    </td>
                     <td>
                       {payment.status === "rembourse"
                         ? `Remboursé${payment.refunded_at ? ` le ${formatDay(payment.refunded_at)}` : ""}`
@@ -113,6 +127,18 @@ export default async function AccountPage() {
           <p className="fine" style={{ marginTop: 10 }}>
             Le reçu de chaque paiement a été envoyé par e-mail. Pour toute question sur un achat, écris à
             l&rsquo;adresse indiquée dans les <Link href="/mentions-legales">mentions légales</Link>.
+          </p>
+        </section>
+      )}
+
+      {settings?.referral_enabled && (
+        <section className="paper pad" aria-labelledby="parrainage-titre">
+          <h2 id="parrainage-titre" style={{ marginTop: 0 }}>
+            Parrainage
+          </h2>
+          <p style={{ margin: 0 }}>
+            Invite tes camarades avec ton lien personnel : réduction pour eux, jours offerts pour toi.{" "}
+            <Link href="/parrainage">Mon lien de parrainage</Link>
           </p>
         </section>
       )}

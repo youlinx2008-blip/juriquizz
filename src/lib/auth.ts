@@ -12,6 +12,10 @@ export type Viewer = {
   /** Accès au contenu (pass, testeur bêta ou administration). */
   hasAccess: boolean;
   hasBeta: boolean;
+  /** Exclusivités Premium (Pass Année Premium, testeur bêta ou administration). */
+  hasPremium: boolean;
+  /** Au moins un examen blanc est proposé. */
+  hasExams: boolean;
   /** Fin de l'accès en cours (null : pas d'accès, ou accès sans date de fin). */
   accessEndsAt: string | null;
   /** Fin du dernier accès terminé (pass expiré). */
@@ -28,6 +32,8 @@ type ViewerContext = {
   is_admin: boolean;
   has_access: boolean;
   has_beta: boolean;
+  has_premium: boolean;
+  has_exams: boolean;
   access_ends_at: string | null;
   last_ended_at: string | null;
   cgu_version: number | null;
@@ -59,6 +65,8 @@ export const getViewer = cache(async (): Promise<Viewer | null> => {
     isAdmin: ctx.is_admin,
     hasAccess: ctx.has_access,
     hasBeta: ctx.has_beta,
+    hasPremium: ctx.has_premium,
+    hasExams: ctx.has_exams ?? false,
     accessEndsAt: ctx.has_access ? (ctx.access_ends_at ?? null) : null,
     lastEndedAt: ctx.last_ended_at ?? null,
     cguVersion: ctx.cgu_version ?? null,

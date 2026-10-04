@@ -6,7 +6,15 @@ import { signUpAction, type AuthFormState } from "@/app/actions/auth";
 import { EmailSent } from "@/components/forms/email-sent";
 import { FieldError, invalidProps } from "@/components/forms/field-error";
 
-export function SignupForm({ initialCode, next }: { initialCode: string; next: string }) {
+export function SignupForm({
+  initialCode,
+  next,
+  referralCode = "",
+}: {
+  initialCode: string;
+  next: string;
+  referralCode?: string;
+}) {
   const [state, action, pending] = useActionState<AuthFormState, FormData>(signUpAction, { status: "idle" });
   const [method, setMethod] = useState<"password" | "link">("password");
 
@@ -16,6 +24,7 @@ export function SignupForm({ initialCode, next }: { initialCode: string; next: s
   return (
     <form className="form" action={action} noValidate>
       {next && <input type="hidden" name="next" value={next} />}
+      {referralCode && <input type="hidden" name="referralCode" value={referralCode} />}
       {state.status === "error" && (
         <p className="notice bad" role="alert">
           {state.message}

@@ -54,10 +54,14 @@ export async function startCheckoutAction(_prev: CheckoutState, formData: FormDa
 
   let paymentUrl: string;
   try {
-    const session = await createCheckoutSession(data as Order, plan, {
-      userId: viewer.userId,
-      email: viewer.email,
-    });
+    // Avec des exclusivités Premium en ligne, les autres pass les excluent : la page de paiement le dit.
+    const exclusives = await supabase.rpc("premium_exclusives");
+    const session = await createCheckoutSession(
+      data as Order,
+      plan,
+      { userId: viewer.userId, email: viewer.email },
+      (exclusives.data?.length ?? 0) > 0,
+    );
     if (!session.url) throw new Error("Adresse de la page de paiement absente.");
     const attached = await supabase.rpc("attach_checkout_session", {
       p_payment_id: (data as Order).payment_id,
